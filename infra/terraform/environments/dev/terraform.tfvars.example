@@ -1,0 +1,23 @@
+# Example variables for dev environment
+aws_region           = "ap-southeast-3"
+environment          = "dev"
+name_prefix          = "nihonpath"
+vpc_cidr             = "10.0.0.0/16"
+single_nat_gateway   = true
+api_cpu              = 256
+api_memory           = 512
+api_min_capacity     = 2
+api_max_capacity     = 5
+worker_cpu           = 256
+worker_memory        = 512
+worker_desired_count = 1
+postgres_engine_version = "16.4"
+postgres_instance_class = "db.t4g.micro"
+statement_timeout_ms    = 3000
+backup_retention_days   = 14
+pgbouncer_pool_mode     = "transaction"
+redis_engine_version    = "7.1"
+redis_node_type         = "cache.t4g.micro"
+cloudfront_price_class  = "PriceClass_100"
+jwt_algorithm           = "ES256"
+
