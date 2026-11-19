@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f8f7f3" />
+    <meta
+      name="description"
+      content="Meet NihonPath: a Japanese-learning app in development. Explore a thoughtful path from your first kana to JLPT N1, with spaced repetition and offline-first learning on the roadmap."
+    />
+    <meta property="og:title" content="NihonPath — Find your own path to Japanese" />
+    <meta
+      property="og:description"
+      content="Small steps. Meaningful progress. Discover a more thoughtful Japanese-learning journey, now in development."
+    />
+    <meta property="og:type" content="website" />
+    <title>NihonPath — Find your own path to Japanese</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+    <link rel="preload" href="assets/dm-sans-regular.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></symbol>
+      <symbol id="arrow-up" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12" /></symbol>
+      <symbol id="github" viewBox="0 0 24 24">
+        <path
+          d="M9 19c-4.3 1.3-4.3-2.2-6-2.7M15 22v-3.5c0-1 .1-1.5-.5-2 3.3-.4 6.7-1.6 6.7-7.3 0-1.6-.6-2.9-1.5-3.9.2-.4.7-1.9-.2-3.8 0 0-1.2-.4-4 1.5a13.8 13.8 0 0 0-7 0c-2.8-1.9-4-1.5-4-1.5-.9 1.9-.4 3.4-.2 3.8C3.4 6.3 2.8 7.6 2.8 9.2c0 5.7 3.4 6.9 6.7 7.3-.5.5-.6 1-.5 2V22"
+        />
+      </symbol>
+      <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></symbol>
+      <symbol id="book" viewBox="0 0 24 24">
+        <path d="M12 5v16M12 5C9 3 5 3 2 4v15c3-1 7-1 10 2 3-3 7-3 10-2V4c-3-1-7-1-10 1Z" />
+      </symbol>
+      <symbol id="repeat" viewBox="0 0 24 24">
+        <path d="m16 2 4 4-4 4M4 11V9a3 3 0 0 1 3-3h13M8 22l-4-4 4-4m12-1v2a3 3 0 0 1-3 3H4" />
+      </symbol>
+      <symbol id="offline" viewBox="0 0 24 24">
+        <path
+          d="m3 3 18 18M8.5 8.5a11 11 0 0 1 11.7 2.8M3.8 11.3a11 11 0 0 1 1.8-1.5M6.5 14.5a7.5 7.5 0 0 1 7.5-1.6M9.5 17.5a3.5 3.5 0 0 1 5 0M12 21h.01M2 6.5a16 16 0 0 1 3-1.8M9 3.4a16 16 0 0 1 13 3.1"
+        />
+      </symbol>
+      <symbol id="language" viewBox="0 0 24 24">
+        <path d="M3 5h12M9 3v2m4 0c0 7-5 11-9 12M5 9c2 4 4 6 8 8m1 4 4-11 4 11m-6.5-4h5" />
+      </symbol>
+      <symbol id="spark" viewBox="0 0 24 24">
+        <path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z" />
+      </symbol>
+    </svg>
+
+    <header class="header wrap">
+      <a class="brand" href="#" aria-label="NihonPath home"
+        ><span class="brand-mark" lang="ja">日</span>NihonPath<span class="brand-dot">.</span></a
+      >
+      <button
+        class="menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="navigation"
+        aria-label="Open navigation"
+      >
+        <span></span><span></span>
+      </button>
+      <nav id="navigation" class="navigation" aria-label="Main navigation">
+        <a href="#approach">The approach</a>
+        <a href="#path">Your learning path</a>
+        <a href="#faq">FAQ</a>
+        <a
+          class="nav-cta"
+          href="https://github.com/lymau/nihonpath"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Follow the journey <svg class="icon"><use href="#arrow-up" /></svg
+        ></a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            <span class="tiny-sun" aria-hidden="true"></span> SMALL STEPS. A WHOLE NEW WORLD.
+          </p>
+          <h1 id="hero-title">Learn Japanese.<br />Find your<br /><em>own path.</em></h1>
+          <p class="hero-description">
+            From your first <span lang="ja">こんにちは</span> to the stories you’ve always wanted to
+            understand. A thoughtful way to build your Japanese, one day at a time.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#path"
+              >Explore your path <svg class="icon"><use href="#arrow" /></svg
+            ></a>
+            <a class="text-link" href="#practice"
+              ><span class="play-icon" aria-hidden="true">▷</span> Try a flashcard</a
+            >
+          </div>
+          <p class="development-note">
+            <span aria-hidden="true"></span> In development
+            <span class="note-divider">/</span> Designed for iOS & Android
+          </p>
+        </div>
+        <div class="hero-visual">
+          <div class="landscape-frame">
+            <img
+              class="hero-art"
+              src="assets/journey.jpg"
+              width="1024"
+              height="1280"
+              alt="A winding path through lavender mountains toward a distant torii gate and Mount Fuji."
+              fetchpriority="high"
+            />
+            <div class="art-caption">
+              <span lang="ja">一歩ずつ。</span><span>ONE STEP AT A TIME.</span>
+            </div>
+          </div>
+          <div class="journey-label">
+            <svg class="icon"><use href="#spark" /></svg> Your journey starts with one word.
+          </div>
+          <section
+            id="practice"
+            class="flashcard"
+            aria-label="Interactive sample flashcards"
+            tabindex="-1"
+          >
+            <div class="flashcard-top">
+              <span>YOUR FIRST WORDS</span><span id="card-count">01 / 03</span>
+            </div>
+            <div class="flashcard-word" aria-live="polite">
+              <span id="card-word" lang="ja">旅</span
+              ><span id="card-reading" lang="ja">たび · tabi</span>
+            </div>
+            <div id="card-answer" class="card-answer" role="status" aria-live="polite" hidden>
+              <strong id="card-meaning">journey</strong
+              ><span id="card-indonesian" lang="id">perjalanan</span>
+            </div>
+            <button
+              id="reveal-card"
+              class="reveal-button"
+              type="button"
+              aria-expanded="false"
+              aria-controls="card-answer"
+            >
+              Reveal meaning <svg class="icon"><use href="#arrow" /></svg>
+            </button>
+            <button id="next-card" class="reveal-button" type="button" hidden>
+              Next word <svg class="icon"><use href="#arrow" /></svg>
+            </button>
+            <p class="sample-label">A little preview, not a live app screen.</p>
+          </section>
+          <span class="vertical-note" aria-hidden="true">THE JOURNEY IS THE LEARNING.</span>
+        </div>
+      </section>
+
+      <div class="principles wrap" aria-label="Product vision">
+        <div>
+          <svg class="icon"><use href="#book" /></svg><span>From kana to JLPT N1</span>
+        </div>
+        <div>
+          <svg class="icon"><use href="#repeat" /></svg><span>Built around how you remember</span>
+        </div>
+        <div>
+          <svg class="icon"><use href="#offline" /></svg><span>Designed for life offline</span>
+        </div>
+        <div>
+          <svg class="icon"><use href="#language" /></svg><span>English & Bahasa Indonesia</span>
+        </div>
+      </div>
+
+      <section class="approach-section section wrap" id="approach" aria-labelledby="approach-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">LESS OVERWHELM. MORE “I GET IT.”</p>
+            <h2 id="approach-title">A little structure.<br />A lot of possibility.</h2>
+          </div>
+          <p>
+            You don’t need to learn everything today.<br />Just the right thing for your next step.
+          </p>
+        </div>
+        <p class="roadmap-note">
+          The experience we’re building <span>·</span> Features below are on the roadmap.
+        </p>
+        <div class="feature-grid">
+          <article class="feature-card lavender-card">
+            <div class="feature-illustration memory-illustration" aria-hidden="true">
+              <div class="mini-word mini-word-back">学</div>
+              <div class="mini-word mini-word-front">学<span>to learn</span></div>
+              <span class="memory-check"
+                ><svg class="icon"><use href="#check" /></svg></span
+              ><span class="mini-tag">Right on time.</span>
+            </div>
+            <div class="feature-text">
+              <span class="feature-number">01 / REMEMBER</span>
+              <h3>Make it stick.<br />Not just for the test.</h3>
+              <p>
+                Spaced repetition is planned to bring words back when you need them, helping
+                familiarity become lasting knowledge.
+              </p>
+            </div>
+          </article>
+          <article class="feature-card peach-card">
+            <div class="feature-illustration sentence-illustration" aria-hidden="true">
+              <span class="sentence-label">SMALL WORDS. REAL MEANING.</span>
+              <div class="sentence">
+                <ruby>日本語<rt>にほんご</rt></ruby
+                >を<ruby>学<rt>まな</rt></ruby
+                >ぶ。
+              </div>
+              <div class="sentence-translation">I’m learning Japanese.</div>
+              <span class="sentence-underline"></span
+              ><span class="mini-tag">Aha. Now it clicks.</span>
+            </div>
+            <div class="feature-text">
+              <span class="feature-number">02 / UNDERSTAND</span>
+              <h3>Beyond words.<br />Into the real world.</h3>
+              <p>
+                Connect vocabulary and grammar with graded reading and listening, with explanations
+                in English and Indonesian.
+              </p>
+            </div>
+          </article>
+          <article class="feature-card sage-card">
+            <div class="feature-illustration offline-illustration" aria-hidden="true">
+              <div class="offline-pack">
+                <span class="pack-icon" lang="ja">あ</span>
+                <div><strong>Your next chapter</strong><span>Kana · Content pack</span></div>
+                <span class="download-check"
+                  ><svg class="icon"><use href="#check" /></svg
+                ></span>
+              </div>
+              <div class="offline-caption">
+                <svg class="icon"><use href="#offline" /></svg> Less connection. More connection.
+              </div>
+              <span class="mini-tag">Take your learning with you.</span>
+            </div>
+            <div class="feature-text">
+              <span class="feature-number">03 / KEEP GOING</span>
+              <h3>Your pace.<br />Your place.</h3>
+              <p>
+                An offline-first vision: download a content pack, then make time for Japanese
+                wherever your day takes you.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="path-section section" id="path" aria-labelledby="path-title">
+        <div class="wrap">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">THERE’S A NEXT STEP FOR EVERYONE</p>
+              <h2 id="path-title">From “hello” to a whole new world.</h2>
+            </div>
+            <p>
+              A curriculum planned to grow with you.<br />Start at the beginning. See where it
+              leads.
+            </p>
+          </div>
+          <div class="level-tabs" role="tablist" aria-label="Explore the planned curriculum">
+            <button
+              id="tab-kana"
+              class="level-tab"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              aria-controls="level-panel"
+              tabindex="0"
+              data-level="kana"
+            >
+              <span class="level-step">START HERE</span><strong>Kana</strong
+              ><span>The first step</span>
+            </button>
+            <button
+              id="tab-n5"
+              class="level-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="level-panel"
+              tabindex="-1"
+              data-level="n5"
+            >
+              <span class="level-step">FOUNDATION</span><strong>N5</strong
+              ><span>Find your feet</span>
+            </button>
+            <button
+              id="tab-n4"
+              class="level-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="level-panel"
+              tabindex="-1"
+              data-level="n4"
+            >
+              <span class="level-step">BUILD</span><strong>N4</strong><span>Connect the dots</span>
+            </button>
+            <button
+              id="tab-n3"
+              class="level-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="level-panel"
+              tabindex="-1"
+              data-level="n3"
+            >
+              <span class="level-step">EXPLORE</span><strong>N3</strong
+              ><span>Broaden your world</span>
+            </button>
+            <button
+              id="tab-n2"
+              class="level-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="level-panel"
+              tabindex="-1"
+              data-level="n2"
+            >
+              <span class="level-step">DEEPEN</span><strong>N2</strong
+              ><span>Read between lines</span>
+            </button>
+            <button
+              id="tab-n1"
+              class="level-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="level-panel"
+              tabindex="-1"
+              data-level="n1"
+            >
+              <span class="level-step">REFINE</span><strong>N1</strong><span>Find more nuance</span>
+            </button>
+          </div>
+          <div
+            id="level-panel"
+            class="level-panel"
+            role="tabpanel"
+            aria-labelledby="tab-kana"
+            tabindex="0"
+          >
+            <div class="level-symbol" id="level-symbol" lang="ja" aria-hidden="true">
+              あ<span>ア</span>
+            </div>
+            <div class="level-detail">
+              <span class="level-badge" id="level-badge">LEVEL 0 · KANA</span>
+              <h3 id="level-title">Every great journey starts with あ.</h3>
+              <p id="level-description">
+                Meet hiragana and katakana, the building blocks of Japanese. Get comfortable with
+                the sounds, shapes, and strokes that make everything else possible.
+              </p>
+              <ul id="level-skills">
+                <li>Hiragana & katakana</li>
+                <li>Sound recognition</li>
+                <li>Writing practice</li>
+              </ul>
+            </div>
+            <div class="path-aside">
+              <span class="path-flower" aria-hidden="true"
+                ><svg class="icon"><use href="#spark" /></svg
+              ></span>
+              <p>No experience?<br /><strong>You’re in the right place.</strong></p>
+              <span class="planned-label">PLANNED CURRICULUM</span>
+            </div>
+          </div>
+          <p class="curriculum-note">
+            Our roadmap begins with Kana and N5, then expands toward N1. NihonPath is not affiliated
+            with the JLPT.
+          </p>
+        </div>
+      </section>
+
+      <section class="philosophy-section section wrap" aria-labelledby="philosophy-title">
+        <div class="philosophy-mark" lang="ja" aria-hidden="true">
+          道<span>michi / the way</span>
+        </div>
+        <div>
+          <p class="eyebrow">PROGRESS, NOT PERFECTION</p>
+          <h2 id="philosophy-title">
+            Some days, a lesson.<br />Some days, just one word.<br /><em
+              >Both are a step forward.</em
+            >
+          </h2>
+          <p>
+            NihonPath is being built for real life, not perfect study streaks. A clear path,
+            meaningful practice, and the room to learn at your own pace.
+          </p>
+        </div>
+      </section>
+
+      <section class="faq-section section wrap" id="faq" aria-labelledby="faq-title">
+        <div class="faq-heading">
+          <p class="eyebrow">A FEW THINGS YOU MIGHT BE WONDERING</p>
+          <h2 id="faq-title">Before you<br />take the first step.</h2>
+          <p>
+            Still curious? Explore the project<br />and its plans on
+            <a href="https://github.com/lymau/nihonpath" target="_blank" rel="noopener noreferrer"
+              >GitHub <span aria-hidden="true">↗</span></a
+            >.
+          </p>
+        </div>
+        <div class="faq-list">
+          <details open>
+            <summary>
+              Can I download NihonPath yet?<span class="faq-plus" aria-hidden="true"></span>
+            </summary>
+            <p>
+              Not yet. NihonPath is in early development, and there’s no public app release linked
+              from the repository. This page introduces the planned experience. Follow the GitHub
+              project for development updates.
+            </p>
+          </details>
+          <details>
+            <summary>
+              Is it a good fit for complete beginners?<span
+                class="faq-plus"
+                aria-hidden="true"
+              ></span>
+            </summary>
+            <p>
+              That’s the plan. The curriculum starts at Level 0 with hiragana and katakana, before
+              moving into N5 vocabulary, kanji, and grammar. Later stages are planned to extend
+              through N1.
+            </p>
+          </details>
+          <details>
+            <summary>
+              Will I be able to learn offline?<span class="faq-plus" aria-hidden="true"></span>
+            </summary>
+            <p>
+              Offline-first learning is a core design goal. The plan is for downloaded lessons,
+              reviews, and practice tests to work without an internet connection, with progress
+              syncing when you reconnect. This is not yet a released feature.
+            </p>
+          </details>
+          <details>
+            <summary>
+              Which languages and devices are planned?<span
+                class="faq-plus"
+                aria-hidden="true"
+              ></span>
+            </summary>
+            <p>
+              NihonPath is being designed for Android and iOS, with an interface and grammar
+              explanations in both English and Bahasa Indonesia. A browser-based learning app is not
+              part of the initial roadmap.
+            </p>
+          </details>
+          <details>
+            <summary>
+              Will NihonPath be free?<span class="faq-plus" aria-hidden="true"></span>
+            </summary>
+            <p>
+              The roadmap proposes free Kana and N5 content, with premium content for higher levels
+              through in-app purchases. Final pricing and availability have not been announced.
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <section class="cta-section wrap" aria-labelledby="cta-title">
+        <div class="cta-sun" aria-hidden="true"></div>
+        <p class="eyebrow">YOUR NEXT CHAPTER IS TAKING SHAPE</p>
+        <h2 id="cta-title">A new language.<br /><em>A new way to see the world.</em></h2>
+        <p>
+          We’re building NihonPath one thoughtful step at a time.<br />Come along for the journey.
+        </p>
+        <a
+          class="button button-primary"
+          href="https://github.com/lymau/nihonpath"
+          target="_blank"
+          rel="noopener noreferrer"
+          ><svg class="icon"><use href="#github" /></svg> Follow on GitHub
+          <svg class="icon"><use href="#arrow-up" /></svg></a
+        ><span class="cta-footnote">In development. Made for the long journey.</span>
+      </section>
+    </main>
+
+    <footer class="footer wrap">
+      <a class="brand" href="#" aria-label="NihonPath home"
+        ><span class="brand-mark" lang="ja">日</span>NihonPath<span class="brand-dot">.</span></a
+      >
+      <p>A little Japanese. A little closer.</p>
+      <div>
+        <a href="https://github.com/lymau/nihonpath" target="_blank" rel="noopener noreferrer"
+          >GitHub <svg class="icon"><use href="#arrow-up" /></svg></a
+        ><a href="#main">Back to top ↑</a>
+      </div>
+      <p class="footer-note">
+        NihonPath · An independent Japanese-learning project. App previews are illustrative.
+      </p>
+    </footer>
+  </body>
+</html>
