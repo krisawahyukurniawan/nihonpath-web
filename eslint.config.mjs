@@ -37,6 +37,8 @@ export default tseslint.config(
       'scripts/**',
       'tests/**',
       'docs/**',
+      'apps/landing/**',
+      'kanji-verification/**',
       '*.config.*',
     ],
   },

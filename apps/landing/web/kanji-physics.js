@@ -30,7 +30,7 @@ export const { initPhysics, stepBodies } = (() => {
     // without changing the direction of a fast diagonal throw.
     const peak = Math.max(Math.abs(x), Math.abs(y), maximum);
     const length = Math.hypot(x / peak, y / peak);
-    const scale = Math.min(1, (maximum / peak) / (length || 1));
+    const scale = Math.min(1, maximum / peak / (length || 1));
     return { x: x * scale, y: y * scale };
   }
 
@@ -48,9 +48,7 @@ export const { initPhysics, stepBodies } = (() => {
         body[axis] = reflectTravel ? Math.min(end, -body[axis] * WALL_RESTITUTION) : 0;
         if (body[velocity] < 0) body[velocity] *= -WALL_RESTITUTION;
       } else if (body[axis] >= end) {
-        body[axis] = reflectTravel
-          ? Math.max(0, end - (body[axis] - end) * WALL_RESTITUTION)
-          : end;
+        body[axis] = reflectTravel ? Math.max(0, end - (body[axis] - end) * WALL_RESTITUTION) : end;
         if (body[velocity] > 0) body[velocity] *= -WALL_RESTITUTION;
       }
     }
@@ -71,9 +69,10 @@ export const { initPhysics, stepBodies } = (() => {
     let size = horizontal ? 'width' : 'height';
     let normal = (horizontal ? dx : dy) >= 0 ? 1 : -1;
     let overlap = horizontal ? overlapX : overlapY;
-    const room = (item, inverse, key, dimension, sign) => inverse
-      ? Math.max(0, sign > 0 ? bounds[dimension] - item[dimension] - item[key] : item[key])
-      : 0;
+    const room = (item, inverse, key, dimension, sign) =>
+      inverse
+        ? Math.max(0, sign > 0 ? bounds[dimension] - item[dimension] - item[key] : item[key])
+        : 0;
     let roomA = room(a, inverseA, axis, size, -normal);
     let roomB = room(b, inverseB, axis, size, normal);
 
@@ -81,9 +80,13 @@ export const { initPhysics, stepBodies } = (() => {
     // Choose the shortest feasible escape (including the opposite direction).
     if (roomA + roomB < overlap - EPSILON) {
       let best = Infinity;
-      for (const [key, dimension] of [['x', 'width'], ['y', 'height']]) {
+      for (const [key, dimension] of [
+        ['x', 'width'],
+        ['y', 'height'],
+      ]) {
         for (const sign of [1, -1]) {
-          const distance = sign > 0 ? a[key] + a[dimension] - b[key] : b[key] + b[dimension] - a[key];
+          const distance =
+            sign > 0 ? a[key] + a[dimension] - b[key] : b[key] + b[dimension] - a[key];
           const availableA = room(a, inverseA, key, dimension, -sign);
           const availableB = room(b, inverseB, key, dimension, sign);
           if (distance < best && availableA + availableB >= distance - EPSILON) {
@@ -123,8 +126,10 @@ export const { initPhysics, stepBodies } = (() => {
   }
 
   function overlaps(a, b) {
-    return Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x) > EPSILON
-      && Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y) > EPSILON;
+    return (
+      Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x) > EPSILON &&
+      Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y) > EPSILON
+    );
   }
 
   function repairPositions(bodies, bounds) {
@@ -133,7 +138,9 @@ export const { initPhysics, stepBodies } = (() => {
     // the nearest movable tile to a free AABB edge candidate. Do not reset the
     // arena or inject energy; already-separated bodies are never relocated.
     for (let pass = 0; pass < bodies.length; pass += 1) {
-      const affected = bodies.filter((a) => !a.fixed && bodies.some((b) => a !== b && overlaps(a, b)));
+      const affected = bodies.filter(
+        (a) => !a.fixed && bodies.some((b) => a !== b && overlaps(a, b)),
+      );
       if (!affected.length) return;
       let best = null;
       for (const body of affected) {
@@ -151,7 +158,8 @@ export const { initPhysics, stepBodies } = (() => {
             const distance = (x - body.x) ** 2 + (y - body.y) ** 2;
             if (best && distance >= best.distance) continue;
             const candidate = { x, y, width: body.width, height: body.height };
-            if (!others.some((other) => overlaps(candidate, other))) best = { body, x, y, distance };
+            if (!others.some((other) => overlaps(candidate, other)))
+              best = { body, x, y, distance };
           }
         }
       }
@@ -200,7 +208,11 @@ export const { initPhysics, stepBodies } = (() => {
     for (let substep = 0; substep < count; substep += 1) {
       for (const body of result) {
         if (body.fixed) continue;
-        const velocity = limitVector(body.vx + acceleration.x * h, body.vy + acceleration.y * h, MAX_SPEED);
+        const velocity = limitVector(
+          body.vx + acceleration.x * h,
+          body.vy + acceleration.y * h,
+          MAX_SPEED,
+        );
         body.vx = velocity.x;
         body.vy = velocity.y;
         body.x += body.vx * h;
@@ -227,8 +239,17 @@ export const { initPhysics, stepBodies } = (() => {
     return result;
   }
 
-  function initPhysics({ arena, pauseButton, tiltButton, resetButton, status, onSelect = () => {}, t = (en) => en }) {
-    if (!arena?.ownerDocument?.defaultView) throw new TypeError('initPhysics requires a DOM arena.');
+  function initPhysics({
+    arena,
+    pauseButton,
+    tiltButton,
+    resetButton,
+    status,
+    onSelect = () => {},
+    t = (en) => en,
+  }) {
+    if (!arena?.ownerDocument?.defaultView)
+      throw new TypeError('initPhysics requires a DOM arena.');
     const doc = arena.ownerDocument;
     const win = doc.defaultView;
     const cleanups = [];
@@ -264,9 +285,14 @@ export const { initPhysics, stepBodies } = (() => {
 
     function onScreen() {
       const rect = arena.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0
-        && rect.top < (win.innerHeight || doc.documentElement.clientHeight)
-        && rect.left < (win.innerWidth || doc.documentElement.clientWidth);
+      return (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.bottom > 0 &&
+        rect.right > 0 &&
+        rect.top < (win.innerHeight || doc.documentElement.clientHeight) &&
+        rect.left < (win.innerWidth || doc.documentElement.clientWidth)
+      );
     }
     let inView = onScreen();
 
@@ -278,10 +304,17 @@ export const { initPhysics, stepBodies } = (() => {
       // Geometry/input only; colours, typography, focus rings and decoration
       // belong to the parent stylesheet. --tile-size may be responsive.
       Object.assign(button.style, {
-        position: 'absolute', left: '0', top: '0', margin: '0',
-        width: 'var(--tile-size, 64px)', height: 'var(--tile-size, 64px)',
-        minWidth: '0', minHeight: '0', boxSizing: 'border-box',
-        touchAction: 'none', userSelect: 'none',
+        position: 'absolute',
+        left: '0',
+        top: '0',
+        margin: '0',
+        width: 'var(--tile-size, 64px)',
+        height: 'var(--tile-size, 64px)',
+        minWidth: '0',
+        minHeight: '0',
+        boxSizing: 'border-box',
+        touchAction: 'none',
+        userSelect: 'none',
       });
       listen(button, 'pointerdown', (event) => startDrag(event, index));
       listen(button, 'lostpointercapture', (event) => {
@@ -309,7 +342,9 @@ export const { initPhysics, stepBodies } = (() => {
     function updateLanguage() {
       if (destroyed) return;
       if (pauseButton) {
-        pauseButton.textContent = paused ? t('Resume motion', 'Lanjutkan gerakan') : t('Pause motion', 'Jeda gerakan');
+        pauseButton.textContent = paused
+          ? t('Resume motion', 'Lanjutkan gerakan')
+          : t('Pause motion', 'Jeda gerakan');
         pauseButton.setAttribute('aria-pressed', String(paused));
       }
       if (tiltButton) {
@@ -324,10 +359,13 @@ export const { initPhysics, stepBodies } = (() => {
       if (resetButton) resetButton.textContent = t('Reset positions', 'Atur ulang posisi');
       tiles.forEach((tile, index) => {
         const [glyph, en, id] = GLYPHS[index];
-        tile.setAttribute('aria-label', `${glyph} — ${t(en, id)}. ${t(
-          'Practise this kanji. Drag to throw; use arrow keys to move.',
-          'Latih kanji ini. Seret untuk melempar; gunakan tombol panah untuk menggeser.',
-        )}`);
+        tile.setAttribute(
+          'aria-label',
+          `${glyph} — ${t(en, id)}. ${t(
+            'Practise this kanji. Drag to throw; use arrow keys to move.',
+            'Latih kanji ini. Seret untuk melempar; gunakan tombol panah untuk menggeser.',
+          )}`,
+        );
       });
       arena.setAttribute('data-paused', String(paused));
       arena.setAttribute('data-tilt', String(tiltEnabled));
@@ -336,18 +374,39 @@ export const { initPhysics, stepBodies } = (() => {
       status.setAttribute('aria-live', 'polite');
       status.setAttribute('aria-atomic', 'true');
       const messages = {
-        insecure: ['Tilt needs a secure HTTPS connection.', 'Kemiringan memerlukan koneksi HTTPS yang aman.'],
-        unavailable: ['Tilt is unavailable on this device.', 'Kemiringan tidak tersedia di perangkat ini.'],
-        denied: ['Tilt permission was not granted. You can still drag the tiles.', 'Izin kemiringan tidak diberikan. Anda tetap dapat menyeret ubin.'],
-        noData: ['No tilt data received. You can still drag the tiles.', 'Data kemiringan tidak diterima. Anda tetap dapat menyeret ubin.'],
+        insecure: [
+          'Tilt needs a secure HTTPS connection.',
+          'Kemiringan memerlukan koneksi HTTPS yang aman.',
+        ],
+        unavailable: [
+          'Tilt is unavailable on this device.',
+          'Kemiringan tidak tersedia di perangkat ini.',
+        ],
+        denied: [
+          'Tilt permission was not granted. You can still drag the tiles.',
+          'Izin kemiringan tidak diberikan. Anda tetap dapat menyeret ubin.',
+        ],
+        noData: [
+          'No tilt data received. You can still drag the tiles.',
+          'Data kemiringan tidak diterima. Anda tetap dapat menyeret ubin.',
+        ],
         reset: ['Starting positions restored.', 'Posisi awal dipulihkan.'],
       };
-      const parts = [paused
-        ? t('Motion paused. Drag or select a kanji.', 'Gerakan dijeda. Seret atau pilih kanji.')
-        : tiltEnabled
-          ? t('Tilt gravity on. Tilt gently to move the kanji.', 'Gravitasi kemiringan aktif. Miringkan perangkat perlahan untuk menggerakkan kanji.')
-          : t('Zero-G. Drag to throw, or select a kanji to practise.', 'Tanpa gravitasi. Seret untuk melempar, atau pilih kanji untuk berlatih.')];
-      if (reducedMotion && paused) parts.push(t('Reduced motion is respected.', 'Preferensi pengurangan gerakan dihormati.'));
+      const parts = [
+        paused
+          ? t('Motion paused. Drag or select a kanji.', 'Gerakan dijeda. Seret atau pilih kanji.')
+          : tiltEnabled
+            ? t(
+                'Tilt gravity on. Tilt gently to move the kanji.',
+                'Gravitasi kemiringan aktif. Miringkan perangkat perlahan untuk menggerakkan kanji.',
+              )
+            : t(
+                'Zero-G. Drag to throw, or select a kanji to practise.',
+                'Tanpa gravitasi. Seret untuk melempar, atau pilih kanji untuk berlatih.',
+              ),
+      ];
+      if (reducedMotion && paused)
+        parts.push(t('Reduced motion is respected.', 'Preferensi pengurangan gerakan dihormati.'));
       if (tiltPending) parts.push(t('Waiting for tilt permission.', 'Menunggu izin kemiringan.'));
       if (messages[notice]) parts.push(t(...messages[notice]));
       const text = parts.join(' ');
@@ -356,7 +415,8 @@ export const { initPhysics, stepBodies } = (() => {
 
     function render() {
       bodies.forEach((body, index) => {
-        tiles[index].style.transform = `translate3d(${body.x.toFixed(3)}px, ${body.y.toFixed(3)}px, 0)`;
+        tiles[index].style.transform =
+          `translate3d(${body.x.toFixed(3)}px, ${body.y.toFixed(3)}px, 0)`;
       });
     }
 
@@ -377,8 +437,10 @@ export const { initPhysics, stepBodies } = (() => {
         const inRow = Math.min(grid.columns, GLYPHS.length - row * grid.columns);
         return {
           ...body,
-          x: (bounds.width - inRow * (bounds.width / grid.columns)) / 2
-            + ((index % grid.columns) + 0.5) * (bounds.width / grid.columns) - body.width / 2,
+          x:
+            (bounds.width - inRow * (bounds.width / grid.columns)) / 2 +
+            ((index % grid.columns) + 0.5) * (bounds.width / grid.columns) -
+            body.width / 2,
           y: (row + 0.5) * (bounds.height / grid.rows) - body.height / 2,
           vx: Math.cos(index * 2.4 + 0.3) * 38,
           vy: Math.sin(index * 2.4 + 0.3) * 30,
@@ -414,20 +476,29 @@ export const { initPhysics, stepBodies } = (() => {
           height: clamp(tileRect.height / scaleY || 64, 1, Math.min(height, grid.size)),
         };
       });
-      const changed = width !== previous.width || height !== previous.height
-        || sizes.some((size, index) => size.width !== bodies[index]?.width || size.height !== bodies[index]?.height);
+      const changed =
+        width !== previous.width ||
+        height !== previous.height ||
+        sizes.some(
+          (size, index) =>
+            size.width !== bodies[index]?.width || size.height !== bodies[index]?.height,
+        );
       if (changed) {
         finishDrag(null, true);
         bounds = { width, height };
         bodies = sizes.map((size, index) => {
           const old = bodies[index];
           const nx = old && previous.width > old.width ? old.x / (previous.width - old.width) : 0.5;
-          const ny = old && previous.height > old.height ? old.y / (previous.height - old.height) : 0.5;
+          const ny =
+            old && previous.height > old.height ? old.y / (previous.height - old.height) : 0.5;
           return {
-            ...old, ...size,
+            ...old,
+            ...size,
             x: clamp(nx, 0, 1) * (width - size.width),
             y: clamp(ny, 0, 1) * (height - size.height),
-            vx: old?.vx ?? 0, vy: old?.vy ?? 0, fixed: false,
+            vx: old?.vx ?? 0,
+            vy: old?.vy ?? 0,
+            fixed: false,
           };
         });
         if (!initialised) startingPositions();
@@ -548,9 +619,10 @@ export const { initPhysics, stepBodies } = (() => {
       try {
         // This is called only by the tilt button's explicit click. In iOS the
         // request must occur before yielding the user-activation call stack.
-        const permission = typeof Orientation.requestPermission === 'function'
-          ? await Orientation.requestPermission()
-          : 'granted';
+        const permission =
+          typeof Orientation.requestPermission === 'function'
+            ? await Orientation.requestPermission()
+            : 'granted';
         if (destroyed || epoch !== permissionEpoch) return;
         tiltPending = false;
         tiltEnabled = permission === 'granted';
@@ -592,9 +664,15 @@ export const { initPhysics, stepBodies } = (() => {
       const body = bodies[index];
       const now = finite(event.timeStamp, win.performance.now());
       drag = {
-        index, pointerId: event.pointerId, moved: false,
-        startX: point.x, startY: point.y, offsetX: point.x - body.x, offsetY: point.y - body.y,
-        samples: [{ x: body.x, y: body.y, time: now }], lastMovedAt: now,
+        index,
+        pointerId: event.pointerId,
+        moved: false,
+        startX: point.x,
+        startY: point.y,
+        offsetX: point.x - body.x,
+        offsetY: point.y - body.y,
+        samples: [{ x: body.x, y: body.y, time: now }],
+        lastMovedAt: now,
         lastMotionClock: win.performance.now(),
       };
       body.fixed = true;
@@ -632,7 +710,8 @@ export const { initPhysics, stepBodies } = (() => {
       body.y = y;
       const samples = drag.samples;
       if (now > samples[samples.length - 1].time) samples.push({ x, y, time: now });
-      while (samples.length > 2 && (samples[1].time < now - 80 || samples.length > 12)) samples.shift();
+      while (samples.length > 2 && (samples[1].time < now - 80 || samples.length > 12))
+        samples.shift();
       const velocity = sampledVelocity(now);
       body.vx = paused ? 0 : velocity.x;
       body.vy = paused ? 0 : velocity.y;
@@ -646,9 +725,10 @@ export const { initPhysics, stepBodies } = (() => {
       if (event && !cancelled) moveDrag(event);
       const current = drag;
       const body = bodies[current.index];
-      const velocity = !cancelled && current.moved && !paused
-        ? sampledVelocity(finite(event?.timeStamp, win.performance.now()))
-        : { x: 0, y: 0 };
+      const velocity =
+        !cancelled && current.moved && !paused
+          ? sampledVelocity(finite(event?.timeStamp, win.performance.now()))
+          : { x: 0, y: 0 };
       drag = null; // Clear before release: lostpointercapture can be synchronous.
       body.fixed = false;
       body.vx = velocity.x;
@@ -659,9 +739,23 @@ export const { initPhysics, stepBodies } = (() => {
     }
 
     function nudge(event, index) {
-      const directions = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+      const directions = {
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1],
+      };
       const direction = directions[event.key];
-      if (!direction || destroyed || drag || !hasSize || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (
+        !direction ||
+        destroyed ||
+        drag ||
+        !hasSize ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey
+      )
+        return;
       event.preventDefault();
       const body = bodies[index];
       const distance = event.shiftKey ? 24 : 12;
@@ -723,20 +817,31 @@ export const { initPhysics, stepBodies } = (() => {
     }
     listen(win, 'resize', measure);
     if (win.IntersectionObserver) {
-      const observer = new win.IntersectionObserver((entries) => {
-        if (destroyed) return;
-        const entry = entries.find((item) => item.target === arena);
-        if (!entry) return;
-        inView = entry.isIntersecting && entry.intersectionRect.width > 0 && entry.intersectionRect.height > 0;
-        syncMotion();
-      }, { threshold: 0 });
+      const observer = new win.IntersectionObserver(
+        (entries) => {
+          if (destroyed) return;
+          const entry = entries.find((item) => item.target === arena);
+          if (!entry) return;
+          inView =
+            entry.isIntersecting &&
+            entry.intersectionRect.width > 0 &&
+            entry.intersectionRect.height > 0;
+          syncMotion();
+        },
+        { threshold: 0 },
+      );
       observer.observe(arena);
       cleanups.push(() => observer.disconnect());
     } else {
-      listen(win, 'scroll', () => {
-        inView = onScreen();
-        syncMotion();
-      }, { passive: true, capture: true });
+      listen(
+        win,
+        'scroll',
+        () => {
+          inView = onScreen();
+          syncMotion();
+        },
+        { passive: true, capture: true },
+      );
     }
     measure();
     updateLanguage();
@@ -755,7 +860,10 @@ export const { initPhysics, stepBodies } = (() => {
       tiles.forEach((tile) => tile.remove());
       tiltButton?.setAttribute('aria-busy', 'false');
       tiltButton?.setAttribute('aria-pressed', 'false');
-      for (const [name, value] of [['data-paused', previousPaused], ['data-tilt', previousTilt]]) {
+      for (const [name, value] of [
+        ['data-paused', previousPaused],
+        ['data-tilt', previousTilt],
+      ]) {
         if (value === null) arena.removeAttribute(name);
         else arena.setAttribute(name, value);
       }

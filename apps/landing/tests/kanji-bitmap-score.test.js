@@ -15,9 +15,20 @@ import { normalizeMask, scoreMasks } from '../web/kanji-bitmap-score.js';
     return { width, height, data };
   }
 
-  const horizontal = mask(40, 40, [[5, 5, 30, 2], [10, 19, 20, 2], [5, 33, 30, 2]]);
-  const vertical = mask(40, 40, [[5, 5, 2, 30], [19, 10, 2, 20], [33, 5, 2, 30]]);
-  const subset = mask(40, 40, [[5, 5, 30, 2], [5, 33, 30, 2]]);
+  const horizontal = mask(40, 40, [
+    [5, 5, 30, 2],
+    [10, 19, 20, 2],
+    [5, 33, 30, 2],
+  ]);
+  const vertical = mask(40, 40, [
+    [5, 5, 2, 30],
+    [19, 10, 2, 20],
+    [33, 5, 2, 30],
+  ]);
+  const subset = mask(40, 40, [
+    [5, 5, 30, 2],
+    [5, 33, 30, 2],
+  ]);
   const empty = mask(40, 40);
   const counts = { userStrokeCount: 3, referenceStrokeCount: 3 };
 
@@ -27,7 +38,8 @@ import { normalizeMask, scoreMasks } from '../web/kanji-bitmap-score.js';
       for (let x = 0; x < source.width; x += 1) {
         for (let dy = 0; dy < scale; dy += 1) {
           for (let dx = 0; dx < scale; dx += 1) {
-            result.data[(y * scale + offsetY + dy) * result.width + x * scale + offsetX + dx] = source.data[y * source.width + x];
+            result.data[(y * scale + offsetY + dy) * result.width + x * scale + offsetX + dx] =
+              source.data[y * source.width + x];
           }
         }
       }
@@ -36,7 +48,9 @@ import { normalizeMask, scoreMasks } from '../web/kanji-bitmap-score.js';
   }
 
   function metrics(result) {
-    return Object.fromEntries(['total', 'precision', 'recall', 'f1', 'count'].map((key) => [key, result[key]]));
+    return Object.fromEntries(
+      ['total', 'precision', 'recall', 'f1', 'count'].map((key) => [key, result[key]]),
+    );
   }
 
   function assertBounded(result) {
@@ -48,7 +62,8 @@ import { normalizeMask, scoreMasks } from '../web/kanji-bitmap-score.js';
     assert.equal(result.comparison.height, 64);
     for (const name of ['overlap', 'extra', 'missing']) {
       assert.equal(result.comparison[name].length, 64 * 64);
-      for (const alpha of result.comparison[name]) assert.ok(Number.isFinite(alpha) && alpha >= 0 && alpha <= 1);
+      for (const alpha of result.comparison[name])
+        assert.ok(Number.isFinite(alpha) && alpha >= 0 && alpha <= 1);
     }
   }
 
@@ -62,10 +77,19 @@ import { normalizeMask, scoreMasks } from '../web/kanji-bitmap-score.js';
   });
 
   test('identical opaque, antialiased, and single-pixel masks score exactly 100', () => {
-    const antialiased = mask(20, 18, [[2, 3, 13, 2, 0.3], [3, 10, 10, 3, 0.85]]);
+    const antialiased = mask(20, 18, [
+      [2, 3, 13, 2, 0.3],
+      [3, 10, 10, 3, 0.85],
+    ]);
     for (const source of [horizontal, vertical, antialiased, mask(10, 10, [[4, 7, 1, 1]])]) {
       const result = scoreMasks(source, source, counts);
-      assert.deepEqual(metrics(result), { total: 100, precision: 100, recall: 100, f1: 100, count: 100 });
+      assert.deepEqual(metrics(result), {
+        total: 100,
+        precision: 100,
+        recall: 100,
+        f1: 100,
+        count: 100,
+      });
       assert.ok(result.comparison.extra.every((alpha) => alpha === 0));
       assert.ok(result.comparison.missing.every((alpha) => alpha === 0));
       assert.ok(result.comparison.overlap.some((alpha) => alpha > 0));
@@ -74,7 +98,11 @@ import { normalizeMask, scoreMasks } from '../web/kanji-bitmap-score.js';
 
   test('independent bounding boxes remove translation and uniform bitmap scale', () => {
     for (const source of [horizontal, vertical]) {
-      for (const [scale, offsetX, offsetY] of [[1, 13, 7], [2, 0, 0], [3, 11, 4]]) {
+      for (const [scale, offsetX, offsetY] of [
+        [1, 13, 7],
+        [2, 0, 0],
+        [3, 11, 4],
+      ]) {
         const moved = transform(source, scale, offsetX, offsetY);
         const expected = normalizeMask(source);
         const actual = normalizeMask(moved);
@@ -101,8 +129,18 @@ import { normalizeMask, scoreMasks } from '../web/kanji-bitmap-score.js';
 
   test('empty user, empty reference, and zero-area inputs return zero metrics', () => {
     for (const blank of [empty, null, { width: 0, height: 0, data: [] }]) {
-      for (const [user, reference] of [[blank, horizontal], [horizontal, blank], [blank, blank]]) {
-        assert.deepEqual(metrics(scoreMasks(user, reference, counts)), { total: 0, precision: 0, recall: 0, f1: 0, count: 0 });
+      for (const [user, reference] of [
+        [blank, horizontal],
+        [horizontal, blank],
+        [blank, blank],
+      ]) {
+        assert.deepEqual(metrics(scoreMasks(user, reference, counts)), {
+          total: 0,
+          precision: 0,
+          recall: 0,
+          f1: 0,
+          count: 0,
+        });
       }
     }
   });
@@ -113,8 +151,16 @@ import { normalizeMask, scoreMasks } from '../web/kanji-bitmap-score.js';
   });
 
   test('Gaussian support tolerates a small local offset, but not a large one', () => {
-    const near = mask(40, 40, [[5, 5, 30, 2], [10, 20, 20, 2], [5, 33, 30, 2]]);
-    const far = mask(40, 40, [[5, 5, 30, 2], [10, 27, 20, 2], [5, 33, 30, 2]]);
+    const near = mask(40, 40, [
+      [5, 5, 30, 2],
+      [10, 20, 20, 2],
+      [5, 33, 30, 2],
+    ]);
+    const far = mask(40, 40, [
+      [5, 5, 30, 2],
+      [10, 27, 20, 2],
+      [5, 33, 30, 2],
+    ]);
     assert.equal(scoreMasks(near, horizontal, counts).total, 100);
     assert.ok(scoreMasks(far, horizontal, counts).total < 90);
   });
@@ -136,20 +182,33 @@ import { normalizeMask, scoreMasks } from '../web/kanji-bitmap-score.js';
   });
 
   test('stroke multiplier penalizes both missing and extra, symmetric under swapping counts', () => {
-    for (const [userStrokeCount, referenceStrokeCount, expected] of [[2, 3, 67], [3, 2, 67], [4, 3, 75], [3, 4, 75], [1, 3, 33], [3, 1, 33]]) {
+    for (const [userStrokeCount, referenceStrokeCount, expected] of [
+      [2, 3, 67],
+      [3, 2, 67],
+      [4, 3, 75],
+      [3, 4, 75],
+      [1, 3, 33],
+      [3, 1, 33],
+    ]) {
       const result = scoreMasks(horizontal, horizontal, { userStrokeCount, referenceStrokeCount });
       assert.equal(result.f1, 100);
       assert.equal(result.count, expected);
       assert.equal(result.total, expected);
     }
     const geometricMismatch = scoreMasks(horizontal, vertical, counts);
-    const withExtraStroke = scoreMasks(horizontal, vertical, { userStrokeCount: 6, referenceStrokeCount: 3 });
+    const withExtraStroke = scoreMasks(horizontal, vertical, {
+      userStrokeCount: 6,
+      referenceStrokeCount: 3,
+    });
     assert.ok(Math.abs(withExtraStroke.total - geometricMismatch.f1 / 2) <= 1);
   });
 
   test('nonpositive or invalid stroke counts cannot produce a positive total', () => {
     for (const invalid of [0, -1, 1.5, NaN, Infinity]) {
-      for (const options of [{ userStrokeCount: invalid, referenceStrokeCount: 3 }, { userStrokeCount: 3, referenceStrokeCount: invalid }]) {
+      for (const options of [
+        { userStrokeCount: invalid, referenceStrokeCount: 3 },
+        { userStrokeCount: 3, referenceStrokeCount: invalid },
+      ]) {
         const result = scoreMasks(horizontal, horizontal, options);
         assert.equal(result.total, 0);
         assert.equal(result.count, 0);
@@ -168,7 +227,10 @@ import { normalizeMask, scoreMasks } from '../web/kanji-bitmap-score.js';
 
   test('scoring and normalization never mutate inputs or share output buffers', () => {
     const user = Object.freeze({ ...horizontal, data: Object.freeze(Array.from(horizontal.data)) });
-    const reference = Object.freeze({ ...vertical, data: Object.freeze(Array.from(vertical.data)) });
+    const reference = Object.freeze({
+      ...vertical,
+      data: Object.freeze(Array.from(vertical.data)),
+    });
     const before = JSON.stringify([user, reference]);
     normalizeMask(user);
     const first = scoreMasks(user, reference, counts);

@@ -7,12 +7,14 @@ const body = (values = {}) => ({ x: 100, y: 100, width: 64, height: 64, vx: 0, v
 const close = (actual, expected, tolerance = 1e-6) => {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} should be close to ${expected}`);
 };
-const overlap = (a, b) => Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x) > 1e-5
-  && Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y) > 1e-5;
+const overlap = (a, b) =>
+  Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x) > 1e-5 &&
+  Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y) > 1e-5;
 
 function bounded(bodies, bounds) {
   for (const item of bodies) {
-    for (const key of ['x', 'y', 'width', 'height', 'vx', 'vy']) assert.ok(Number.isFinite(item[key]), key);
+    for (const key of ['x', 'y', 'width', 'height', 'vx', 'vy'])
+      assert.ok(Number.isFinite(item[key]), key);
     assert.ok(item.x >= -1e-7 && item.x + item.width <= bounds.width + 1e-7);
     assert.ok(item.y >= -1e-7 && item.y + item.height <= bounds.height + 1e-7);
     assert.ok(Math.hypot(item.vx, item.vy) <= 720 + 1e-7);
@@ -34,18 +36,32 @@ test('native module exports the initializer and a pure immutable step', () => {
 });
 
 test('opposing equal-mass tiles collide elastically without overlap', () => {
-  const next = stepBodies([body({ x: 100, vx: 100, vy: 12 }), body({ x: 165, vx: -100, vy: 12 })], box, 0.02);
+  const next = stepBodies(
+    [body({ x: 100, vx: 100, vy: 12 }), body({ x: 165, vx: -100, vy: 12 })],
+    box,
+    0.02,
+  );
   close(next[0].vx, -100);
   close(next[1].vx, 100);
   close(next[0].vy, 12);
   close(next[1].vy, 12);
   assert.equal(overlap(...next), false);
-  close(next.reduce((sum, item) => sum + item.vx, 0), 0);
-  close(next.reduce((sum, item) => sum + item.vx ** 2 + item.vy ** 2, 0), 2 * (100 ** 2 + 12 ** 2));
+  close(
+    next.reduce((sum, item) => sum + item.vx, 0),
+    0,
+  );
+  close(
+    next.reduce((sum, item) => sum + item.vx ** 2 + item.vy ** 2, 0),
+    2 * (100 ** 2 + 12 ** 2),
+  );
 });
 
 test('vertical elastic impulse leaves tangential velocity unchanged', () => {
-  const next = stepBodies([body({ y: 100, vx: 17, vy: 80 }), body({ y: 164, vx: 17, vy: -20 })], box, 0.01);
+  const next = stepBodies(
+    [body({ y: 100, vx: 17, vy: 80 }), body({ y: 164, vx: 17, vy: -20 })],
+    box,
+    0.01,
+  );
   close(next[0].vy, -20);
   close(next[1].vy, 80);
   close(next[0].vx, 17);
@@ -96,11 +112,19 @@ test('a dragged tile can displace a neighbour trapped against a wall', () => {
 });
 
 test('non-finite input, degenerate bounds and oversized tiles remain finite', () => {
-  for (const arena of [{ width: 280, height: 180 }, { width: 0, height: 0 }]) {
-    const next = stepBodies([
-      body({ x: Infinity, y: NaN, vx: Infinity, vy: -Infinity, width: 900, height: 800 }),
-      body({ x: -1e300, y: 1e300, vx: Number.MAX_VALUE, vy: Number.MAX_VALUE }),
-    ], arena, 0.05, { x: NaN, y: Infinity });
+  for (const arena of [
+    { width: 280, height: 180 },
+    { width: 0, height: 0 },
+  ]) {
+    const next = stepBodies(
+      [
+        body({ x: Infinity, y: NaN, vx: Infinity, vy: -Infinity, width: 900, height: 800 }),
+        body({ x: -1e300, y: 1e300, vx: Number.MAX_VALUE, vy: Number.MAX_VALUE }),
+      ],
+      arena,
+      0.05,
+      { x: NaN, y: Infinity },
+    );
     bounded(next, arena);
   }
   bounded(stepBodies([body()], { width: NaN, height: Infinity }, 1), { width: 0, height: 0 });
@@ -118,9 +142,11 @@ test('dt guards discard invalid and excess elapsed time', () => {
 });
 
 test('substeps prevent opposing fast small tiles from tunnelling', () => {
-  const next = stepBodies([
-    body({ x: 80, width: 8, vx: 720 }), body({ x: 100, width: 8, vx: -720 }),
-  ], box, 0.05);
+  const next = stepBodies(
+    [body({ x: 80, width: 8, vx: 720 }), body({ x: 100, width: 8, vx: -720 })],
+    box,
+    0.05,
+  );
   assert.ok(next[0].vx < 0 && next[1].vx > 0);
   assert.ok(next[0].x + next[0].width <= next[1].x + 1e-6);
   bounded(next, box);
@@ -137,22 +163,27 @@ test('gravity uses seconds and speed limiting preserves direction', () => {
 
 test('ten tiles stay bounded and non-overlapping in a 280px arena over time', () => {
   const arena = { width: 280, height: 360 };
-  let items = Array.from({ length: 10 }, (_, index) => body({
-    x: (index % 4) * 70 + 3, y: Math.floor(index / 4) * 110 + 10,
-    vx: Math.cos(index * 2.4) * 180, vy: Math.sin(index * 2.4) * 140,
-  }));
+  let items = Array.from({ length: 10 }, (_, index) =>
+    body({
+      x: (index % 4) * 70 + 3,
+      y: Math.floor(index / 4) * 110 + 10,
+      vx: Math.cos(index * 2.4) * 180,
+      vy: Math.sin(index * 2.4) * 140,
+    }),
+  );
   for (let i = 0; i < 600; i += 1) {
     items = stepBodies(items, arena, 1 / 60, { x: 25, y: 30 });
     bounded(items, arena);
     for (let a = 0; a < items.length; a += 1) {
-      for (let b = a + 1; b < items.length; b += 1) assert.equal(overlap(items[a], items[b]), false, `frame ${i}, pair ${a}/${b}`);
+      for (let b = a + 1; b < items.length; b += 1)
+        assert.equal(overlap(items[a], items[b]), false, `frame ${i}, pair ${a}/${b}`);
     }
   }
 });
 
 test('deep overlaps from discontinuous pointer moves have deterministic bounded repair', () => {
   let seed = 123;
-  const random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296);
+  const random = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
   const arena = { width: 280, height: 360 };
   for (let trial = 0; trial < 200; trial += 1) {
     const input = Array.from({ length: 10 }, () => body({ x: random() * 216, y: random() * 296 }));
@@ -160,7 +191,8 @@ test('deep overlaps from discontinuous pointer moves have deterministic bounded 
     bounded(next, arena);
     assert.deepEqual(stepBodies(input, arena, 0), next);
     for (let a = 0; a < next.length; a += 1) {
-      for (let b = a + 1; b < next.length; b += 1) assert.equal(overlap(next[a], next[b]), false, `trial ${trial}`);
+      for (let b = a + 1; b < next.length; b += 1)
+        assert.equal(overlap(next[a], next[b]), false, `trial ${trial}`);
     }
   }
 });
@@ -172,16 +204,28 @@ class Events {
     if (!this.handlers.has(type)) this.handlers.set(type, new Set());
     this.handlers.get(type).add(handler);
   }
-  removeEventListener(type, handler) { this.handlers.get(type)?.delete(handler); }
+  removeEventListener(type, handler) {
+    this.handlers.get(type)?.delete(handler);
+  }
   emit(type, values = {}) {
     const event = {
-      type, target: this, detail: 1, cancelable: true, prevented: false,
-      preventDefault() { this.prevented = true; }, stopPropagation() {}, ...values,
+      type,
+      target: this,
+      detail: 1,
+      cancelable: true,
+      prevented: false,
+      preventDefault() {
+        this.prevented = true;
+      },
+      stopPropagation() {},
+      ...values,
     };
     for (const handler of [...(this.handlers.get(type) || [])]) handler(event);
     return event;
   }
-  count(type) { return this.handlers.get(type)?.size || 0; }
+  count(type) {
+    return this.handlers.get(type)?.size || 0;
+  }
 }
 
 class Element extends Events {
@@ -200,27 +244,57 @@ class Element extends Events {
     this.left = 0;
     this.top = 0;
   }
-  get offsetWidth() { return this.clientWidth; }
-  get offsetHeight() { return this.clientHeight; }
-  setAttribute(name, value) { this.attributes.set(name, String(value)); }
-  getAttribute(name) { return this.attributes.get(name) ?? null; }
-  removeAttribute(name) { this.attributes.delete(name); }
-  appendChild(child) { this.children.push(child); child.parent = this; }
-  remove() { this.parent.children = this.parent.children.filter((child) => child !== this); }
-  focus() { this.ownerDocument.activeElement = this; }
+  get offsetWidth() {
+    return this.clientWidth;
+  }
+  get offsetHeight() {
+    return this.clientHeight;
+  }
+  setAttribute(name, value) {
+    this.attributes.set(name, String(value));
+  }
+  getAttribute(name) {
+    return this.attributes.get(name) ?? null;
+  }
+  removeAttribute(name) {
+    this.attributes.delete(name);
+  }
+  appendChild(child) {
+    this.children.push(child);
+    child.parent = this;
+  }
+  remove() {
+    this.parent.children = this.parent.children.filter((child) => child !== this);
+  }
+  focus() {
+    this.ownerDocument.activeElement = this;
+  }
   setPointerCapture(id) {
     if (this.captureError) throw this.captureError;
     this.captures.add(id);
   }
-  hasPointerCapture(id) { return this.captures.has(id); }
+  hasPointerCapture(id) {
+    return this.captures.has(id);
+  }
   releasePointerCapture(id) {
     this.captures.delete(id);
     this.emit('lostpointercapture', { pointerId: id });
   }
   getBoundingClientRect() {
-    const width = this.parent ? Math.min(this.parent.tileSize || 64, parseFloat(this.style.maxWidth) || 64) : this.clientWidth;
-    const height = this.parent ? Math.min(this.parent.tileSize || 64, parseFloat(this.style.maxHeight) || 64) : this.clientHeight;
-    return { left: this.left, top: this.top, width, height, right: this.left + width, bottom: this.top + height };
+    const width = this.parent
+      ? Math.min(this.parent.tileSize || 64, parseFloat(this.style.maxWidth) || 64)
+      : this.clientWidth;
+    const height = this.parent
+      ? Math.min(this.parent.tileSize || 64, parseFloat(this.style.maxHeight) || 64)
+      : this.clientHeight;
+    return {
+      left: this.left,
+      top: this.top,
+      width,
+      height,
+      right: this.left + width,
+      bottom: this.top + height,
+    };
   }
 }
 
@@ -241,9 +315,15 @@ function setup({ reduced = false, width = 500, height = 360, secure = true, orie
   const frames = new Map();
   const timers = new Map();
   win.performance = { now: () => clock };
-  win.requestAnimationFrame = (callback) => { frames.set(++id, callback); return id; };
+  win.requestAnimationFrame = (callback) => {
+    frames.set(++id, callback);
+    return id;
+  };
   win.cancelAnimationFrame = (key) => frames.delete(key);
-  win.setTimeout = (callback) => { timers.set(++id, callback); return id; };
+  win.setTimeout = (callback) => {
+    timers.set(++id, callback);
+    return id;
+  };
   win.clearTimeout = (key) => timers.delete(key);
   const media = new Events();
   media.matches = reduced;
@@ -251,14 +331,24 @@ function setup({ reduced = false, width = 500, height = 360, secure = true, orie
   const resizers = [];
   const intersections = [];
   win.ResizeObserver = class {
-    constructor(callback) { this.callback = callback; resizers.push(this); }
+    constructor(callback) {
+      this.callback = callback;
+      resizers.push(this);
+    }
     observe() {}
-    disconnect() { this.disconnected = true; }
+    disconnect() {
+      this.disconnected = true;
+    }
   };
   win.IntersectionObserver = class {
-    constructor(callback) { this.callback = callback; intersections.push(this); }
+    constructor(callback) {
+      this.callback = callback;
+      intersections.push(this);
+    }
     observe() {}
-    disconnect() { this.disconnected = true; }
+    disconnect() {
+      this.disconnected = true;
+    }
   };
   const arena = new Element(doc, width, height);
   const pauseButton = new Element(doc);
@@ -268,13 +358,33 @@ function setup({ reduced = false, width = 500, height = 360, secure = true, orie
   const selected = [];
   let language = 'en';
   const api = initPhysics({
-    arena, pauseButton, tiltButton, resetButton, status,
-    onSelect: (glyph) => selected.push(glyph), t: (en, indonesian) => language === 'en' ? en : indonesian,
+    arena,
+    pauseButton,
+    tiltButton,
+    resetButton,
+    status,
+    onSelect: (glyph) => selected.push(glyph),
+    t: (en, indonesian) => (language === 'en' ? en : indonesian),
   });
   return {
-    win, doc, arena, pauseButton, tiltButton, resetButton, status, api, frames, timers, media, selected,
-    resizers, intersections,
-    locale(value) { language = value; api.updateLanguage(); },
+    win,
+    doc,
+    arena,
+    pauseButton,
+    tiltButton,
+    resetButton,
+    status,
+    api,
+    frames,
+    timers,
+    media,
+    selected,
+    resizers,
+    intersections,
+    locale(value) {
+      language = value;
+      api.updateLanguage();
+    },
     tick(time) {
       clock = time;
       const pending = [...frames.values()];
@@ -288,19 +398,40 @@ function setup({ reduced = false, width = 500, height = 360, secure = true, orie
     },
     visible(value) {
       arena.top = value ? 0 : 2000;
-      intersections.forEach((observer) => observer.callback([{
-        target: arena, isIntersecting: value, intersectionRect: { width: value ? arena.clientWidth : 0, height: value ? arena.clientHeight : 0 },
-      }]));
+      intersections.forEach((observer) =>
+        observer.callback([
+          {
+            target: arena,
+            isIntersecting: value,
+            intersectionRect: {
+              width: value ? arena.clientWidth : 0,
+              height: value ? arena.clientHeight : 0,
+            },
+          },
+        ]),
+      );
     },
   };
 }
 const positions = (h) => h.arena.children.map((tile) => tile.style.transform);
-const xy = (tile) => [...tile.style.transform.matchAll(/(-?[\d.]+)px/g)].map((match) => Number(match[1]));
-const pointer = (values = {}) => ({ pointerId: 1, isPrimary: true, button: 0, clientX: 50, clientY: 50, timeStamp: 0, ...values });
+const xy = (tile) =>
+  [...tile.style.transform.matchAll(/(-?[\d.]+)px/g)].map((match) => Number(match[1]));
+const pointer = (values = {}) => ({
+  pointerId: 1,
+  isPrimary: true,
+  button: 0,
+  clientX: 50,
+  clientY: 50,
+  timeStamp: 0,
+  ...values,
+});
 
 test('creates accessible glyph buttons and locale updates never reset positions or select', () => {
   const h = setup();
-  assert.equal(h.arena.children.map((tile) => tile.textContent).join(' '), '日 月 山 川 水 火 木 心 旅 道');
+  assert.equal(
+    h.arena.children.map((tile) => tile.textContent).join(' '),
+    '日 月 山 川 水 火 木 心 旅 道',
+  );
   h.arena.children.forEach((tile) => {
     assert.equal(tile.type, 'button');
     assert.equal(tile.className, 'physics-tile');
@@ -428,7 +559,11 @@ test('primary capture drag suppresses selection, cancel releases, taps and keybo
 });
 
 test('throw velocity uses elapsed seconds, clamps speed and discards stale releases', () => {
-  for (const [moveTime, releaseTime, delta, expectedSpeed] of [[40, 50, 20, 400], [8, 10, 40, 720], [40, 250, 20, 0]]) {
+  for (const [moveTime, releaseTime, delta, expectedSpeed] of [
+    [40, 50, 20, 400],
+    [8, 10, 40, 720],
+    [40, 250, 20, 0],
+  ]) {
     const h = setup();
     const tile = h.arena.children[0];
     tile.emit('pointerdown', pointer());
@@ -478,7 +613,14 @@ test('synthetic pointer capture swallows only NotFoundError', () => {
 
 test('tilt permission is requested only on explicit click; denial is localized', async () => {
   let calls = 0;
-  const h = setup({ orientation: { requestPermission: async () => { calls += 1; return 'denied'; } } });
+  const h = setup({
+    orientation: {
+      requestPermission: async () => {
+        calls += 1;
+        return 'denied';
+      },
+    },
+  });
   h.locale('id');
   h.resetButton.emit('click');
   assert.equal(calls, 0);
@@ -515,7 +657,10 @@ test('tilt handles nonsecure, missing sensors, timeouts and screen orientation',
   h.tick(0);
   h.tick(40);
   const moved = xy(h.arena.children[0]);
-  assert.ok(moved[0] > initial[0] + Math.cos(0.3) * 38 * 0.04, 'portrait-down maps to landscape-right');
+  assert.ok(
+    moved[0] > initial[0] + Math.cos(0.3) * 38 * 0.04,
+    'portrait-down maps to landscape-right',
+  );
   h.tiltButton.emit('click');
   assert.equal(h.win.count('deviceorientation'), 0);
   h.tiltButton.emit('click');
@@ -527,7 +672,14 @@ test('tilt handles nonsecure, missing sensors, timeouts and screen orientation',
 
 test('pending permission cannot reactivate tilt after cancel or destroy', async () => {
   let grant;
-  const h = setup({ orientation: { requestPermission: () => new Promise((resolve) => { grant = resolve; }) } });
+  const h = setup({
+    orientation: {
+      requestPermission: () =>
+        new Promise((resolve) => {
+          grant = resolve;
+        }),
+    },
+  });
   h.tiltButton.emit('click');
   assert.equal(h.tiltButton.getAttribute('aria-busy'), 'true');
   h.tiltButton.emit('click');
@@ -547,5 +699,8 @@ test('pending permission cannot reactivate tilt after cancel or destroy', async 
   assert.equal(h.win.count('pointermove'), 0);
   assert.equal(h.doc.count('visibilitychange'), 0);
   assert.equal(h.media.count('change'), 0);
-  assert.doesNotThrow(() => { h.api.destroy(); h.api.updateLanguage(); });
+  assert.doesNotThrow(() => {
+    h.api.destroy();
+    h.api.updateLanguage();
+  });
 });

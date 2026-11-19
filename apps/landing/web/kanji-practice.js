@@ -9,8 +9,15 @@ export const initKanjiStudio = (() => {
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
   return function initKanjiStudio({ root, t, kanjiData }) {
-    if (!root?.querySelector || typeof t !== 'function' || !Array.isArray(kanjiData) || !kanjiData.length) {
-      throw new TypeError('Kanji Studio requires a root, t(en, id), and a nonempty kanjiData array.');
+    if (
+      !root?.querySelector ||
+      typeof t !== 'function' ||
+      !Array.isArray(kanjiData) ||
+      !kanjiData.length
+    ) {
+      throw new TypeError(
+        'Kanji Studio requires a root, t(en, id), and a nonempty kanjiData array.',
+      );
     }
     const document = root.ownerDocument || root;
     const view = document.defaultView;
@@ -20,11 +27,30 @@ export const initKanjiStudio = (() => {
       if (!element) throw new Error(`Kanji Studio is missing #${id}.`);
       return element;
     };
-    const elements = Object.fromEntries([
-      'model', 'kana', 'romaji', 'meaning-en', 'meaning-id', 'stroke-count', 'user-count',
-      'canvas', 'trace', 'undo', 'clear', 'check', 'new', 'result', 'total', 'feedback',
-      'precision', 'recall', 'count', 'diff',
-    ].map((name) => [name, get(`write-${name}`)]));
+    const elements = Object.fromEntries(
+      [
+        'model',
+        'kana',
+        'romaji',
+        'meaning-en',
+        'meaning-id',
+        'stroke-count',
+        'user-count',
+        'canvas',
+        'trace',
+        'undo',
+        'clear',
+        'check',
+        'new',
+        'result',
+        'total',
+        'feedback',
+        'precision',
+        'recall',
+        'count',
+        'diff',
+      ].map((name) => [name, get(`write-${name}`)]),
+    );
     const canvas = elements.canvas;
     const context = canvas.getContext('2d');
     const diffContext = elements.diff.getContext('2d');
@@ -88,7 +114,10 @@ export const initKanjiStudio = (() => {
       elements.new.disabled = false;
       elements.trace.disabled = false;
       elements.trace.setAttribute('aria-pressed', String(tracing));
-      elements['user-count'].textContent = t(`${strokeLabel(userStrokes.length)} drawn`, `${userStrokes.length} goresan digambar`);
+      elements['user-count'].textContent = t(
+        `${strokeLabel(userStrokes.length)} drawn`,
+        `${userStrokes.length} goresan digambar`,
+      );
     }
 
     function invalidateResult() {
@@ -138,7 +167,10 @@ export const initKanjiStudio = (() => {
       return {
         width: element.width,
         height: element.height,
-        data: Float64Array.from({ length: element.width * element.height }, (_, i) => rgba[i * 4 + 3] / 255),
+        data: Float64Array.from(
+          { length: element.width * element.height },
+          (_, i) => rgba[i * 4 + 3] / 255,
+        ),
       };
     }
 
@@ -203,7 +235,8 @@ export const initKanjiStudio = (() => {
       const comparison = lastScore.comparison;
       const image = comparisonSurface.context.createImageData(comparison.width, comparison.height);
       for (let i = 0; i < comparison.overlap.length; i += 1) {
-        const kind = comparison.extra[i] > 0 ? 'extra' : comparison.missing[i] > 0 ? 'missing' : 'overlap';
+        const kind =
+          comparison.extra[i] > 0 ? 'extra' : comparison.missing[i] > 0 ? 'missing' : 'overlap';
         image.data[i * 4] = colors[kind][0];
         image.data[i * 4 + 1] = colors[kind][1];
         image.data[i * 4 + 2] = colors[kind][2];
@@ -212,7 +245,13 @@ export const initKanjiStudio = (() => {
       comparisonSurface.context.putImageData(image, 0, 0);
       diffContext.clearRect(0, 0, elements.diff.width, elements.diff.height);
       diffContext.imageSmoothingEnabled = false;
-      diffContext.drawImage(comparisonSurface.element, 0, 0, elements.diff.width, elements.diff.height);
+      diffContext.drawImage(
+        comparisonSurface.element,
+        0,
+        0,
+        elements.diff.width,
+        elements.diff.height,
+      );
     }
 
     function renderResult() {
@@ -220,20 +259,47 @@ export const initKanjiStudio = (() => {
       const entry = kanjiData[currentIndex];
       const { total, precision, recall, count } = lastScore;
       elements.total.textContent = String(total);
-      elements.total.setAttribute('aria-label', t(`Bitmap similarity: ${total} out of 100`, `Kemiripan bitmap: ${total} dari 100`));
+      elements.total.setAttribute(
+        'aria-label',
+        t(`Bitmap similarity: ${total} out of 100`, `Kemiripan bitmap: ${total} dari 100`),
+      );
       for (const [name, value, label] of [
-        ['precision', precision, t('Precision: drawn ink supported by the reference', 'Presisi: tinta gambar yang sesuai dengan acuan')],
-        ['recall', recall, t('Recall: reference ink covered by the drawing', 'Cakupan: tinta acuan yang tercakup oleh gambar')],
+        [
+          'precision',
+          precision,
+          t(
+            'Precision: drawn ink supported by the reference',
+            'Presisi: tinta gambar yang sesuai dengan acuan',
+          ),
+        ],
+        [
+          'recall',
+          recall,
+          t(
+            'Recall: reference ink covered by the drawing',
+            'Cakupan: tinta acuan yang tercakup oleh gambar',
+          ),
+        ],
         ['count', count, t('Stroke-count accuracy multiplier', 'Pengali ketepatan jumlah goresan')],
       ]) {
         elements[name].textContent = `${value}%`;
         elements[name].setAttribute('aria-label', `${label}: ${value}%`);
       }
-      const feedback = total >= 85
-        ? t('Close bitmap match. Compare the details with the model.', 'Bitmap sangat mirip. Bandingkan detailnya dengan contoh.')
-        : total >= 50
-          ? t('Some bitmap shapes match. Look for extra or missing ink.', 'Sebagian bentuk bitmap cocok. Perhatikan tinta yang berlebih atau kurang.')
-          : t('The bitmap shapes differ. Compare the shapes and try again.', 'Bentuk bitmap berbeda. Bandingkan bentuknya lalu coba lagi.');
+      const feedback =
+        total >= 85
+          ? t(
+              'Close bitmap match. Compare the details with the model.',
+              'Bitmap sangat mirip. Bandingkan detailnya dengan contoh.',
+            )
+          : total >= 50
+            ? t(
+                'Some bitmap shapes match. Look for extra or missing ink.',
+                'Sebagian bentuk bitmap cocok. Perhatikan tinta yang berlebih atau kurang.',
+              )
+            : t(
+                'The bitmap shapes differ. Compare the shapes and try again.',
+                'Bentuk bitmap berbeda. Bandingkan bentuknya lalu coba lagi.',
+              );
       const countNote = t(
         `Strokes drawn: ${userStrokes.length}; reference: ${entry.strokes}.`,
         `Goresan digambar: ${userStrokes.length}; acuan: ${entry.strokes}.`,
@@ -249,7 +315,10 @@ export const initKanjiStudio = (() => {
       );
       elements.diff.setAttribute('aria-label', alt);
       elements.diff.textContent = alt;
-      elements.result.setAttribute('aria-label', t('Bitmap comparison result', 'Hasil perbandingan bitmap'));
+      elements.result.setAttribute(
+        'aria-label',
+        t('Bitmap comparison result', 'Hasil perbandingan bitmap'),
+      );
       elements.result.hidden = false;
       paintComparison();
     }
@@ -262,8 +331,14 @@ export const initKanjiStudio = (() => {
       elements['meaning-en'].textContent = entry.english;
       elements['meaning-id'].textContent = entry.indonesian;
       elements['stroke-count'].textContent = strokeLabel(entry.strokes);
-      elements.result.setAttribute('aria-label', t('Bitmap comparison result', 'Hasil perbandingan bitmap'));
-      elements.model.setAttribute('aria-label', t(`Reference strokes for ${entry.kanji}`, `Goresan acuan untuk ${entry.kanji}`));
+      elements.result.setAttribute(
+        'aria-label',
+        t('Bitmap comparison result', 'Hasil perbandingan bitmap'),
+      );
+      elements.model.setAttribute(
+        'aria-label',
+        t(`Reference strokes for ${entry.kanji}`, `Goresan acuan untuk ${entry.kanji}`),
+      );
       const drawingLabel = t(
         `Draw ${entry.kanji} here with a pen, mouse, or touch.`,
         `Gambar ${entry.kanji} di sini dengan pena, tetikus, atau sentuhan.`,
@@ -278,8 +353,12 @@ export const initKanjiStudio = (() => {
         ['new', t('New kanji', 'Kanji baru')],
       ]) {
         elements[name].textContent = label;
-        elements[name].setAttribute('aria-label', name === 'trace'
-          ? t('Toggle the tracing guide', 'Tampilkan atau sembunyikan panduan jiplak') : label);
+        elements[name].setAttribute(
+          'aria-label',
+          name === 'trace'
+            ? t('Toggle the tracing guide', 'Tampilkan atau sembunyikan panduan jiplak')
+            : label,
+        );
       }
       updateControls();
       renderResult();
@@ -289,7 +368,8 @@ export const initKanjiStudio = (() => {
     function releasePointer() {
       const pointer = activePointer;
       activePointer = null;
-      if (pointer !== null && canvas.hasPointerCapture(pointer)) canvas.releasePointerCapture(pointer);
+      if (pointer !== null && canvas.hasPointerCapture(pointer))
+        canvas.releasePointerCapture(pointer);
     }
 
     function clearDrawing() {
@@ -330,15 +410,27 @@ export const initKanjiStudio = (() => {
 
     function chooseKanji() {
       if (destroyed) return;
-      const candidates = kanjiData.filter((entry) => entry.kanji !== kanjiData[currentIndex]?.kanji);
-      const entry = candidates[Math.floor(Math.random() * candidates.length)] || kanjiData[currentIndex];
+      const candidates = kanjiData.filter(
+        (entry) => entry.kanji !== kanjiData[currentIndex]?.kanji,
+      );
+      const entry =
+        candidates[Math.floor(Math.random() * candidates.length)] || kanjiData[currentIndex];
       if (entry) selectKanji(entry.kanji);
     }
 
     function pointFromEvent(event) {
       const rect = canvas.getBoundingClientRect();
-      if (!rect.width || !rect.height || !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) return null;
-      return { x: (event.clientX - rect.left) * SPACE / rect.width, y: (event.clientY - rect.top) * SPACE / rect.height };
+      if (
+        !rect.width ||
+        !rect.height ||
+        !Number.isFinite(event.clientX) ||
+        !Number.isFinite(event.clientY)
+      )
+        return null;
+      return {
+        x: ((event.clientX - rect.left) * SPACE) / rect.width,
+        y: ((event.clientY - rect.top) * SPACE) / rect.height,
+      };
     }
 
     function addPoint(event) {
@@ -351,7 +443,13 @@ export const initKanjiStudio = (() => {
     }
 
     listen(canvas, 'pointerdown', (event) => {
-      if (!event.isPrimary || event.button !== 0 || activePointer !== null || !pointFromEvent(event)) return;
+      if (
+        !event.isPrimary ||
+        event.button !== 0 ||
+        activePointer !== null ||
+        !pointFromEvent(event)
+      )
+        return;
       event.preventDefault();
       try {
         canvas.setPointerCapture(event.pointerId);

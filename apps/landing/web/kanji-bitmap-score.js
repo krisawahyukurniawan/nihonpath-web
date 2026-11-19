@@ -11,13 +11,27 @@ export const { normalizeMask, scoreMasks } = (() => {
   // Masks contain row-major alpha coverage in 0..1, NOT RGBA bytes. Null is empty.
   // Pixel-area resampling preserves coverage and proportional scale, including taps.
   function normalizeMask(mask, { size = SIZE, padding = PADDING } = {}) {
-    if (!Number.isInteger(size) || size < 1 || !Number.isInteger(padding) || padding < 0 || padding * 2 >= size) {
-      throw new RangeError('Normalization requires a positive integer size and padding smaller than half the size.');
+    if (
+      !Number.isInteger(size) ||
+      size < 1 ||
+      !Number.isInteger(padding) ||
+      padding < 0 ||
+      padding * 2 >= size
+    ) {
+      throw new RangeError(
+        'Normalization requires a positive integer size and padding smaller than half the size.',
+      );
     }
     const normalized = { width: size, height: size, data: new Float64Array(size * size) };
     if (mask == null) return normalized;
     const { width, height, data } = mask;
-    if (!Number.isInteger(width) || width < 0 || !Number.isInteger(height) || height < 0 || data?.length !== width * height) {
+    if (
+      !Number.isInteger(width) ||
+      width < 0 ||
+      !Number.isInteger(height) ||
+      height < 0 ||
+      data?.length !== width * height
+    ) {
       throw new RangeError('A mask needs integer dimensions and width × height alpha values.');
     }
 
@@ -71,7 +85,9 @@ export const { normalizeMask, scoreMasks } = (() => {
   function toleranceSupport(mask) {
     const { width, height, data } = mask;
     const radius = Math.ceil(SIGMA * 3);
-    const kernel = Array.from({ length: radius * 2 + 1 }, (_, i) => Math.exp(-((i - radius) ** 2) / (2 * SIGMA ** 2)));
+    const kernel = Array.from({ length: radius * 2 + 1 }, (_, i) =>
+      Math.exp(-((i - radius) ** 2) / (2 * SIGMA ** 2)),
+    );
     const weight = kernel.reduce((sum, value) => sum + value, 0);
     const horizontal = new Float64Array(data.length);
     const support = new Uint8Array(data.length);
@@ -79,7 +95,7 @@ export const { normalizeMask, scoreMasks } = (() => {
       for (let x = 0; x < width; x += 1) {
         for (let k = -radius; k <= radius; k += 1) {
           if (x + k >= 0 && x + k < width) {
-            horizontal[y * width + x] += data[y * width + x + k] * kernel[k + radius] / weight;
+            horizontal[y * width + x] += (data[y * width + x + k] * kernel[k + radius]) / weight;
           }
         }
       }
@@ -89,7 +105,7 @@ export const { normalizeMask, scoreMasks } = (() => {
         let blurred = 0;
         for (let k = -radius; k <= radius; k += 1) {
           if (y + k >= 0 && y + k < height) {
-            blurred += horizontal[(y + k) * width + x] * kernel[k + radius] / weight;
+            blurred += (horizontal[(y + k) * width + x] * kernel[k + radius]) / weight;
           }
         }
         support[y * width + x] = data[y * width + x] > 0 || blurred >= SUPPORT_THRESHOLD ? 1 : 0;
@@ -136,9 +152,15 @@ export const { normalizeMask, scoreMasks } = (() => {
     const precision = supportedUser / userInk;
     const recall = supportedReference / referenceInk;
     const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
-    const validCounts = Number.isInteger(userStrokeCount) && userStrokeCount > 0
-      && Number.isInteger(referenceStrokeCount) && referenceStrokeCount > 0;
-    const count = validCounts ? Math.min(userStrokeCount, referenceStrokeCount) / Math.max(userStrokeCount, referenceStrokeCount) : 0;
+    const validCounts =
+      Number.isInteger(userStrokeCount) &&
+      userStrokeCount > 0 &&
+      Number.isInteger(referenceStrokeCount) &&
+      referenceStrokeCount > 0;
+    const count = validCounts
+      ? Math.min(userStrokeCount, referenceStrokeCount) /
+        Math.max(userStrokeCount, referenceStrokeCount)
+      : 0;
     return {
       total: percent(f1 * count),
       precision: percent(precision),

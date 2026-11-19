@@ -29,7 +29,10 @@ test('contains exactly 17 unique kanji in the requested order', () => {
   assert.ok(Array.isArray(kanjiData));
   assert.equal(kanjiData.length, 17);
   assert.equal(new Set(kanjiData.map(({ kanji }) => kanji)).size, 17);
-  assert.deepEqual(kanjiData.map(({ kanji }) => kanji), expected.map(([kanji]) => kanji));
+  assert.deepEqual(
+    kanjiData.map(({ kanji }) => kanji),
+    expected.map(([kanji]) => kanji),
+  );
 });
 
 test('entries have exactly the required fields', () => {
@@ -57,13 +60,21 @@ test('stroke counts match the expected counts and nonempty path arrays', () => {
       assert.match(path, /^M[-\d.]/, `${kanji}: stroke ${index + 1} starts with moveto`);
     }
   }
-  assert.equal(kanjiData.reduce((total, { paths }) => total + paths.length, 0), 92);
+  assert.equal(
+    kanjiData.reduce((total, { paths }) => total + paths.length, 0),
+    92,
+  );
 });
 
 test('kana, romaji, and translations match the chosen common readings', () => {
   assert.deepEqual(
     kanjiData.map(({ kanji, strokes, kana, romaji, english, indonesian }) => [
-      kanji, strokes, kana, romaji, english, indonesian,
+      kanji,
+      strokes,
+      kana,
+      romaji,
+      english,
+      indonesian,
     ]),
     expected,
   );
