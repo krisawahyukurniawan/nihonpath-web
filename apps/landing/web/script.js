@@ -44,6 +44,7 @@ import { initPhysics } from './kanji-physics.js';
     const outer = doc.createElement('span');
     outer.className = 'brand-inline';
     outer.setAttribute('aria-label', 'NihonPath');
+    outer.setAttribute('translate', 'no');
 
     const kanji = doc.createElement('span');
     kanji.setAttribute('aria-hidden', 'true');
@@ -160,33 +161,50 @@ import { initPhysics } from './kanji-physics.js';
   let lastScrollY = window.scrollY;
   let activeNavIndex = -1;
 
-  function updateNavIndicator() {
+  function updateNavIndicator(navMetrics) {
     if (!desktopNav || !navIndicator) return;
     const activeLink = navLinks[activeNavIndex];
-    if (!activeLink || desktopNav.offsetParent === null) {
+    if (navMetrics === null || !activeLink) {
       navIndicator.style.opacity = '0';
       return;
     }
-    const navRect = desktopNav.getBoundingClientRect();
-    const linkRect = activeLink.getBoundingClientRect();
+    let navRect;
+    let linkRect;
+    if (navMetrics) {
+      navRect = navMetrics.navRect;
+      linkRect = navMetrics.navLinkRects[activeNavIndex];
+    } else {
+      if (desktopNav.offsetParent === null) {
+        navIndicator.style.opacity = '0';
+        return;
+      }
+      navRect = desktopNav.getBoundingClientRect();
+      linkRect = activeLink.getBoundingClientRect();
+    }
+    if (!navRect || !linkRect) {
+      navIndicator.style.opacity = '0';
+      return;
+    }
     navIndicator.style.width = `${linkRect.width}px`;
     navIndicator.style.transform = `translateX(${linkRect.left - navRect.left}px)`;
     navIndicator.style.opacity = '1';
   }
 
-  function updateActiveNav() {
+  function updateActiveNav(sectionRects, scrollY, innerHeight, navMetrics) {
     if (!trackedSections.length) return;
-    const probe = window.innerHeight * 0.34;
+    const rects = sectionRects ?? trackedSections.map((section) => section.getBoundingClientRect());
+    const y = scrollY ?? window.scrollY;
+    const probe = (innerHeight ?? window.innerHeight) * 0.34;
     let nextIndex = -1;
-    for (let i = 0; i < trackedSections.length; i += 1) {
-      const rect = trackedSections[i].getBoundingClientRect();
+    for (let i = 0; i < rects.length; i += 1) {
+      const rect = rects[i];
       if (rect.top <= probe && rect.bottom > probe * 0.35) {
         nextIndex = i;
       }
     }
-    if (nextIndex === -1 && window.scrollY > 120) {
-      for (let i = trackedSections.length - 1; i >= 0; i -= 1) {
-        if (trackedSections[i].getBoundingClientRect().top <= probe) {
+    if (nextIndex === -1 && y > 120) {
+      for (let i = rects.length - 1; i >= 0; i -= 1) {
+        if (rects[i].top <= probe) {
           nextIndex = i;
           break;
         }
@@ -199,12 +217,12 @@ import { initPhysics } from './kanji-physics.js';
         else link.removeAttribute('aria-current');
       });
     }
-    updateNavIndicator();
+    updateNavIndicator(navMetrics);
   }
 
-  function updateHeaderVisibility() {
+  function updateHeaderVisibility(scrollY) {
     if (!header) return;
-    const y = window.scrollY;
+    const y = scrollY ?? window.scrollY;
     header.classList.toggle('is-scrolled', y > 24);
     const delta = y - lastScrollY;
     if (mobileMenu?.open || y <= 96) {
@@ -268,14 +286,16 @@ import { initPhysics } from './kanji-physics.js';
   let heroPointerX = 0;
   let heroPointerY = 0;
 
-  function updateHeroParallax() {
+  function updateHeroParallax(scrollY, heroHeight) {
     if (!heroSection || !panoramaFar || !panoramaMid) return;
     if (isReducedMotion()) {
       panoramaFar.style.transform = '';
       panoramaMid.style.transform = '';
       return;
     }
-    const scrollProgress = clamp(window.scrollY / Math.max(1, heroSection.offsetHeight), 0, 1);
+    const y = scrollY ?? window.scrollY;
+    const height = heroHeight ?? heroSection.offsetHeight;
+    const scrollProgress = clamp(y / Math.max(1, height), 0, 1);
     const farX = heroPointerX * -8;
     const farY = heroPointerY * -5 + scrollProgress * 22;
     const midX = heroPointerX * -16;
@@ -330,15 +350,16 @@ import { initPhysics } from './kanji-physics.js';
     updateStory();
   }
 
-  function updateStory() {
+  function updateStory(storyRect, innerHeight) {
     if (!storySection || !storyWords.length) return;
     if (isReducedMotion()) {
       storyArt?.style.setProperty('--story-light', '0.3');
       storyWords.forEach((word) => word.classList.add('is-lit'));
       return;
     }
-    const rect = storySection.getBoundingClientRect();
-    const scrollable = Math.max(1, rect.height - window.innerHeight);
+    const rect = storyRect ?? storySection.getBoundingClientRect();
+    const vh = innerHeight ?? window.innerHeight;
+    const scrollable = Math.max(1, rect.height - vh);
     const progress = clamp(-rect.top / scrollable, 0, 1);
     const light = 0.08 + progress * 0.48;
     storyArt?.style.setProperty('--story-light', light.toFixed(3));
@@ -520,15 +541,28 @@ import { initPhysics } from './kanji-physics.js';
   const profileBeacon = doc.querySelector('#profile-beacon');
   const profileBeaconRing = doc.querySelector('#profile-beacon-ring');
   const profileSkyStop = doc.querySelector('#profile-sky-stop');
+  const fujiCone = doc.querySelector('#fuji-cone');
+  const fujiSnow = doc.querySelector('#fuji-snow');
+  const fujiSwitchbacks = doc.querySelector('#fuji-switchbacks');
+  const profileStars = doc.querySelector('#profile-stars');
+  const profileSun = doc.querySelector('#profile-sun');
+  const profileSunGlow = doc.querySelector('#profile-sun-glow');
+  const profileClimber = doc.querySelector('#profile-climber');
+  const climberBeam = doc.querySelector('#climber-beam');
+  const climberLegBack = doc.querySelector('#climber-leg-back');
+  const climberLegFront = doc.querySelector('#climber-leg-front');
+  const climberArm = doc.querySelector('#climber-arm');
+  const climberPole = doc.querySelector('#climber-pole');
+  const climberTag = doc.querySelector('#climber-tag');
+  const climberTagBg = doc.querySelector('#climber-tag-bg');
+  const climberTagText = doc.querySelector('#climber-tag-text');
   const stationControls = doc.querySelector('#station-controls');
   const stationFacts = doc.querySelector('#station-facts');
   const stationAnnouncement = doc.querySelector('#station-announcement');
-  const replayButton = doc.querySelector('#replay-ascent');
 
   let telemetryProgress = isReducedMotion() ? 1 : 0;
   let lastStationIndex = -1;
   let manualStationLock = false;
-  let replayFrame = null;
   let stationButtons = [];
   let stationFactCards = [];
   let svgStationDots = [];
@@ -601,9 +635,128 @@ import { initPhysics } from './kanji-physics.js';
     profileRidge.setAttribute('d', ridgePath);
     profileArea.setAttribute('d', `${ridgePath} L1054 298 L70 298 Z`);
 
+    if (fujiCone) {
+      fujiCone.setAttribute('d', `${ridgePath} L1062 24 L1070 29 L1084 150 L1084 298 L70 298 Z`);
+    }
+    if (fujiSnow) {
+      const p3 = points[3];
+      const p4 = points[4];
+      const snowY = 128;
+      const ratio = (p3.y - snowY) / (p3.y - p4.y);
+      const snowX = p3.x + (p4.x - p3.x) * ratio;
+      fujiSnow.setAttribute(
+        'd',
+        `M${snowX.toFixed(1)} ${snowY} L${p4.x.toFixed(1)} ${p4.y.toFixed(1)} L1062 24 L1070 29 L1080 118 L1058 106 L1042 126 L1018 96 L986 130 L954 102 L914 134 L880 112 L836 134 L806 118 Z`,
+      );
+    }
+    if (fujiSwitchbacks) {
+      const paths = [];
+      for (let i = 0; i < points.length - 1; i += 1) {
+        const a = points[i];
+        const b = points[i + 1];
+        const steps = 4;
+        const zig = [];
+        for (let s = 0; s <= steps; s += 1) {
+          const tStep = s / steps;
+          const x = a.x + (b.x - a.x) * tStep;
+          const y = a.y + (b.y - a.y) * tStep + (s % 2 === 1 ? 8 : 3);
+          zig.push(`${s === 0 ? 'M' : 'L'}${x.toFixed(1)} ${Math.min(296, y).toFixed(1)}`);
+        }
+        paths.push(zig.join(' '));
+      }
+      paths.push(
+        `M${points[4].x.toFixed(1)} ${(points[4].y + 8).toFixed(1)} Q985 130 925 276`,
+        'M1030 48 Q915 155 815 288',
+        'M960 78 Q830 185 695 292',
+      );
+      fujiSwitchbacks.setAttribute('d', paths.join(' '));
+    }
+
+    if (fujiCone) {
+      fujiCone.setAttribute('d', `${ridgePath} L1062 24 L1070 29 L1084 150 L1084 298 L70 298 Z`);
+    }
+    if (fujiSnow) {
+      const p3 = points[3];
+      const p4 = points[4];
+      const snowY = 128;
+      const ratio = (p3.y - snowY) / (p3.y - p4.y);
+      const snowX = p3.x + (p4.x - p3.x) * ratio;
+      fujiSnow.setAttribute(
+        'd',
+        `M${snowX.toFixed(1)} ${snowY} L${p4.x.toFixed(1)} ${p4.y.toFixed(1)} L1062 24 L1070 29 L1080 118 L1058 106 L1042 126 L1018 96 L986 130 L954 102 L914 134 L880 112 L836 134 L806 118 Z`,
+      );
+    }
+    if (fujiSwitchbacks) {
+      const paths = [];
+      for (let i = 0; i < points.length - 1; i += 1) {
+        const a = points[i];
+        const b = points[i + 1];
+        const steps = 4;
+        const zig = [];
+        for (let s = 0; s <= steps; s += 1) {
+          const tStep = s / steps;
+          const x = a.x + (b.x - a.x) * tStep;
+          const y = a.y + (b.y - a.y) * tStep + (s % 2 === 1 ? 8 : 3);
+          zig.push(`${s === 0 ? 'M' : 'L'}${x.toFixed(1)} ${Math.min(296, y).toFixed(1)}`);
+        }
+        paths.push(zig.join(' '));
+      }
+      paths.push(
+        `M${points[4].x.toFixed(1)} ${(points[4].y + 8).toFixed(1)} Q985 130 925 276`,
+        'M1030 48 Q915 155 815 288',
+        'M960 78 Q830 185 695 292',
+      );
+      fujiSwitchbacks.setAttribute('d', paths.join(' '));
+    }
+
     const dotsFragment = doc.createDocumentFragment();
     svgStationDots = points.map((pt, idx) => {
-      const g = createSvgElement('g', { style: 'cursor: pointer' });
+      const g = createSvgElement('g', {
+        class: 'station-marker',
+        style: 'cursor: pointer',
+        'aria-hidden': 'true',
+      });
+      const landmark = createSvgElement('g', {
+        transform: `translate(${(pt.x + (idx === 0 ? 15 : idx === 4 ? 5 : 0)).toFixed(1)}, ${pt.y.toFixed(1)})`,
+        'aria-hidden': 'true',
+      });
+      if (idx === 0 || idx === 4) {
+        // Torii gate landmark at trailhead (5th Station) and Summit (Kengamine)
+        landmark.append(
+          createSvgElement('path', {
+            d: 'M-8 -13 Q0 -11 8 -13 M-7 -9 H7 M-4 -12 V0 M4 -12 V0',
+            fill: 'none',
+            stroke: idx === 4 ? '#F5B041' : '#FF5E62',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+          }),
+        );
+        if (idx === 4) {
+          landmark.append(
+            createSvgElement('circle', { cx: '0', cy: '-17', r: '2.2', fill: '#F5B041' }),
+          );
+        }
+      } else {
+        // Mountain hut (yamagoya) landmark at 6th, 7th, and 8th stations
+        landmark.append(
+          createSvgElement('path', {
+            d: 'M-9 0 V-7 L0 -12 L9 -7 V0 Z',
+            fill: '#181d2b',
+            stroke: '#A6ADBB',
+            'stroke-width': '1.1',
+            'stroke-linejoin': 'round',
+          }),
+          createSvgElement('rect', {
+            x: '-2.5',
+            y: '-5.5',
+            width: '5',
+            height: '3.2',
+            fill: '#F5B041',
+            opacity: '.75',
+          }),
+        );
+      }
+
       const circle = createSvgElement('circle', {
         cx: pt.x.toFixed(1),
         cy: pt.y.toFixed(1),
@@ -614,13 +767,13 @@ import { initPhysics } from './kanji-physics.js';
       });
       const caption = createSvgElement('text', {
         x: pt.x.toFixed(1),
-        y: (idx === 4 ? pt.y + 18 : pt.y - 12).toFixed(1),
+        y: (idx === 4 ? pt.y + 18 : pt.y - 16).toFixed(1),
         'text-anchor': idx === 4 ? 'end' : idx === 0 ? 'start' : 'middle',
         fill: '#A6ADBB',
         'font-size': '10',
       });
       caption.textContent = `0${idx + 1}`;
-      g.append(circle, caption);
+      g.append(landmark, circle, caption);
       g.addEventListener('click', () => jumpToStation(idx));
       dotsFragment.append(g);
       return { circle, caption };
@@ -730,6 +883,67 @@ import { initPhysics } from './kanji-physics.js';
       const b = Math.round(57 - telemetryProgress * 19);
       profileSkyStop.setAttribute('stop-color', `rgb(${r}, ${g}, ${b})`);
     }
+    if (profileSun && profileSunGlow) {
+      const sunY = (185 - telemetryProgress * 133).toFixed(1);
+      profileSun.setAttribute('cy', sunY);
+      profileSun.setAttribute('opacity', (0.15 + telemetryProgress * 0.8).toFixed(2));
+      profileSunGlow.setAttribute('cy', sunY);
+      profileSunGlow.setAttribute('opacity', (0.18 + telemetryProgress * 0.77).toFixed(2));
+    }
+    if (profileStars) {
+      profileStars.setAttribute('opacity', (0.85 - telemetryProgress * 0.75).toFixed(2));
+    }
+    if (profileClimber) {
+      profileClimber.setAttribute('transform', `translate(${pt.x.toFixed(1)}, ${pt.y.toFixed(1)})`);
+      const atSummit = telemetryProgress >= 0.995;
+      if (atSummit) {
+        climberLegBack?.setAttribute('d', 'M0,-9 L-3,-4 L-4,0');
+        climberLegFront?.setAttribute('d', 'M0,-9 L3,-4 L4,0');
+        climberArm?.setAttribute('d', 'M1,-17 L5,-24 L7,-28');
+        if (climberPole) {
+          climberPole.setAttribute('x1', '7');
+          climberPole.setAttribute('y1', '-32');
+          climberPole.setAttribute('x2', '8');
+          climberPole.setAttribute('y2', '-14');
+        }
+        climberBeam?.setAttribute('opacity', '0');
+      } else {
+        const stride = isReducedMotion() ? 0 : Math.sin(telemetryProgress * Math.PI * 42);
+        climberLegFront?.setAttribute(
+          'd',
+          `M0,-9 L${(3 + stride * 3.5).toFixed(1)},${(-4 - Math.max(0, stride) * 1.5).toFixed(1)} L${(4 + stride * 4.5).toFixed(1)},0`,
+        );
+        climberLegBack?.setAttribute(
+          'd',
+          `M0,-9 L${(-3 - stride * 3.5).toFixed(1)},${(-4 - Math.max(0, -stride) * 1.5).toFixed(1)} L${(-5 - stride * 4.5).toFixed(1)},0`,
+        );
+        climberArm?.setAttribute(
+          'd',
+          `M1,-17 L${(6 - stride * 1.5).toFixed(1)},-14 L${(9 - stride * 2).toFixed(1)},${(-16 - stride * 1.5).toFixed(1)}`,
+        );
+        if (climberPole) {
+          climberPole.setAttribute('x1', (9 - stride * 2).toFixed(1));
+          climberPole.setAttribute('y1', (-18 - stride * 1.5).toFixed(1));
+          climberPole.setAttribute('x2', (11 - stride * 2.5).toFixed(1));
+          climberPole.setAttribute('y2', '0');
+        }
+        climberBeam?.setAttribute(
+          'opacity',
+          clamp(1 - telemetryProgress / 0.85, 0, 0.9).toFixed(2),
+        );
+      }
+      if (climberTagText && climberTagBg && climberTag) {
+        const label = atSummit
+          ? t('SUMMIT · 3,776 m', 'PUNCAK · 3.776 m')
+          : `${formatInt(sample.elevation)} m`;
+        const boxWidth = atSummit ? 108 : 66;
+        climberTagText.textContent = label;
+        climberTagBg.setAttribute('width', String(boxWidth));
+        climberTagBg.setAttribute('x', String(-boxWidth / 2));
+        const offsetX = clamp(pt.x, 108, 1020) - pt.x;
+        climberTag.setAttribute('transform', `translate(${offsetX.toFixed(1)}, -34)`);
+      }
+    }
 
     svgStationDots.forEach((dot, idx) => {
       const reached = idx <= sample.index;
@@ -752,18 +966,9 @@ import { initPhysics } from './kanji-physics.js';
     lastStationIndex = sample.index;
   }
 
-  function stopReplay() {
-    if (replayFrame !== null) {
-      cancelAnimationFrame(replayFrame);
-      replayFrame = null;
-    }
-    replayButton?.setAttribute('aria-pressed', 'false');
-  }
-
   function jumpToStation(index) {
     const station = stations[index];
     if (!station) return;
-    stopReplay();
     const targetProgress = station.distance / 7.5;
 
     const scrollable = ascentScroll ? ascentScroll.offsetHeight - window.innerHeight : 0;
@@ -786,42 +991,15 @@ import { initPhysics } from './kanji-physics.js';
     }
   }
 
-  function updateTelemetryFromScroll() {
-    if (!ascentScroll || isReducedMotion() || replayFrame !== null || manualStationLock) return;
-    const scrollable = ascentScroll.offsetHeight - window.innerHeight;
+  function updateTelemetryFromScroll(ascentHeight, ascentRect, innerHeight) {
+    if (!ascentScroll || isReducedMotion() || manualStationLock) return;
+    const vh = innerHeight ?? window.innerHeight;
+    const totalHeight = ascentHeight ?? ascentScroll.offsetHeight;
+    const scrollable = totalHeight - vh;
     if (scrollable <= 80) return;
-    const rect = ascentScroll.getBoundingClientRect();
+    const rect = ascentRect ?? ascentScroll.getBoundingClientRect();
     const progress = clamp(-rect.top / scrollable, 0, 1);
     renderTelemetry(progress, false);
-  }
-
-  if (replayButton) {
-    replayButton.addEventListener('click', () => {
-      if (isReducedMotion()) {
-        renderTelemetry(1, true);
-        return;
-      }
-      if (replayFrame !== null) {
-        stopReplay();
-        return;
-      }
-      manualStationLock = false;
-      replayButton.setAttribute('aria-pressed', 'true');
-      const startTime = performance.now();
-      const duration = 6400;
-      const tick = (now) => {
-        const progress = clamp((now - startTime) / duration, 0, 1);
-        renderTelemetry(progress, false);
-        if (progress < 1) {
-          replayFrame = requestAnimationFrame(tick);
-        } else {
-          replayFrame = null;
-          replayButton.setAttribute('aria-pressed', 'false');
-          renderTelemetry(1, true);
-        }
-      };
-      replayFrame = requestAnimationFrame(tick);
-    });
   }
 
   /* ------------------------------------------------------------------ */
@@ -1153,6 +1331,12 @@ import { initPhysics } from './kanji-physics.js';
       if (label !== undefined) el.setAttribute('aria-label', label);
     });
 
+    doc.querySelectorAll('[data-en-placeholder][data-id-placeholder]').forEach((el) => {
+      const phKey = currentLang === 'id' ? 'idPlaceholder' : 'enPlaceholder';
+      const placeholder = el.dataset[phKey];
+      if (placeholder !== undefined) el.setAttribute('placeholder', placeholder);
+    });
+
     decorateBrandText(doc.body);
     buildStoryWords();
     syncMenuToggleState();
@@ -1201,18 +1385,38 @@ import { initPhysics } from './kanji-physics.js';
 
   function onScroll() {
     manualStationLock = false;
-    if (replayFrame !== null && !isReducedMotion()) {
-      stopReplay();
-    }
     if (scrollScheduled) return;
     scrollScheduled = true;
     requestAnimationFrame(() => {
       scrollScheduled = false;
-      updateHeaderVisibility();
-      updateActiveNav();
-      updateHeroParallax();
-      updateStory();
-      updateTelemetryFromScroll();
+      const y = window.scrollY;
+      const vh = window.innerHeight;
+      const reduced = isReducedMotion();
+
+      // Batch DOM geometry reads before style/attribute writes to avoid reflows.
+      const sectionRects = trackedSections.map((section) => section.getBoundingClientRect());
+      let navMetrics = null;
+      if (desktopNav && navIndicator && desktopNav.offsetParent !== null) {
+        navMetrics = {
+          navRect: desktopNav.getBoundingClientRect(),
+          navLinkRects: navLinks.map((link) => link.getBoundingClientRect()),
+        };
+      }
+      const heroHeight = !reduced && heroSection ? heroSection.offsetHeight : undefined;
+      const storyRect =
+        !reduced && storySection && storyWords.length
+          ? storySection.getBoundingClientRect()
+          : undefined;
+      const canReadAscent = Boolean(ascentScroll && !reduced && !manualStationLock);
+      const ascentHeight = canReadAscent ? ascentScroll.offsetHeight : undefined;
+      const ascentRect =
+        canReadAscent && ascentHeight - vh > 80 ? ascentScroll.getBoundingClientRect() : undefined;
+
+      updateHeaderVisibility(y);
+      updateActiveNav(sectionRects, y, vh, navMetrics);
+      updateHeroParallax(y, heroHeight);
+      updateStory(storyRect, vh);
+      updateTelemetryFromScroll(ascentHeight, ascentRect, vh);
     });
   }
 
@@ -1228,7 +1432,6 @@ import { initPhysics } from './kanji-physics.js';
   );
 
   reducedMotionQuery.addEventListener('change', (event) => {
-    stopReplay();
     manualStationLock = false;
     if (event.matches) {
       renderCounters(1);
